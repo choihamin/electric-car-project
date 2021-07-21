@@ -1,1 +1,1 @@
-web: waitress-serve --port=$PORT --threads=${WEB_CONCURRENCY:-2} --call Backend:app
+web: gunicorn Backend:app --bind 0.0.0.0:${PORT}
