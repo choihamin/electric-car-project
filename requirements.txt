@@ -47,7 +47,6 @@ wincertstore==0.2
 wrapt==1.12.1
 zipp==3.5.0
 gunicorn==20.1.0
-waitress==absl-py==0.11.0
 aniso8601==9.0.1
 astunparse==1.6.3
 attrs==21.2.0
