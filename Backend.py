@@ -19,8 +19,6 @@ connect = psycopg2.connect(database=url.path[1:],
 cur = connect.cursor()
 cur.execute("select * from customer where customer_id='jason4284' and password='123456789a!' and Did='2017170843'")
 data = cur.fetchall()
-print(data)
-print(url.path)
 
 @app.route('/CheckLogin')
 def CheckLogin():
@@ -35,6 +33,6 @@ def CheckLogin():
         return jsonify({'result_code': 0})
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0')
+    app.run(Debug=True, host='0.0.0.0')
 
 
