@@ -21,7 +21,7 @@ cur.execute("select * from customer where customer_id='jason4284' and password='
 data = cur.fetchall()
 print(data)
 
-@app.route('/CheckLogin', methods=['GET'])
+@app.route('/CheckLogin', methods=['POST'])
 def CheckLogin():
     id = request.args.get('Id')
     pw = request.args.get('Password')
