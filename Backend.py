@@ -28,7 +28,7 @@ def CheckLogin():
     print(id, pw)
     cur.execute("select * from customer where customer_id='{}' and password='{}'".format(id, pw))
     data = cur.fechall()
-    if len(data) != 1:
+    if len(data) == 1:
         return jsonify({'result_code': 1})
     else:
         return jsonify({'result_code': 0})
