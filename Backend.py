@@ -117,7 +117,6 @@ def GetStationInfo():
     path = 'station.geojson'
     with open(path) as f:
         data = json.loads(f.read())
-        print('ㅋ')
     return data
 
 
