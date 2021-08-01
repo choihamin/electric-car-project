@@ -87,9 +87,12 @@ def GetCarCompanyInfo():
     dict_ = {}
     cur.execute("select distinct manufacturer from carmodel")
     data = cur.fetchall()
+    dict_["manufacturers"] = []
     for i in range(len(data)):
-        dict_["manufacturer_{}".format(i)] = data[i][0]
-    return list(dict_.values())
+        dict_["manufacturers"].append(
+            jsonify({"manufacturer": data[i][0]})
+        )
+    return jsonify(dict_)
 
 
 
@@ -99,9 +102,12 @@ def GetCarModelInfo():
     company = request.args.get('Car_company')
     cur.execute("select car_model from CarModel where manufacturer='{}'".format(company))
     data = cur.fetchall()
+    dict_['models'] = []
     for i in range(len(data)):
-        dict_["model_{}".format(i)] = data[i][0]
-    return list(dict_.values())
+        dict_['models'].append(
+            jsonify({'model': data[i][0]})
+        )
+    return jsonify(dict_)
 
 @app.route('/GetStationInfo', methods=['GET', 'POST'])
 def GetStationInfo():
