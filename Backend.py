@@ -87,6 +87,9 @@ def GetCarCompanyInfo():
     dict_ = {}
     cur.execute("select distinct manufacturer from carmodel")
     data = cur.fetchall()
+    for i in range(len(data)):
+        dict_["manufacturer_{}".format(i)] = data[i][0]
+    return jsonify(data)
 
 
 
