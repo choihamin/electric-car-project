@@ -101,7 +101,7 @@ def GetCarModelInfo():
     data = cur.fetchall()
     for i in range(len(data)):
         dict_["model_{}".format(i)] = data[i][0]
-    return jsonify(dict_)
+    return list(dict_.values())
 
 @app.route('/GetStationInfo', methods=['GET', 'POST'])
 def GetStationInfo():
