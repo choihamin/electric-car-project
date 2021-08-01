@@ -7,8 +7,8 @@ from mapboxgl.utils import df_to_geojson
 import json
 import pandas as pd
 
-
 app=Flask(__name__)
+app.config['JSON_AS_ASCII'] = False
 api = Api(app)
 
 up.uses_netloc.append("postgres")
@@ -89,7 +89,7 @@ def GetCarCompanyInfo():
     data = cur.fetchall()
     for i in range(len(data)):
         dict_["manufacturer_{}".format(i)] = data[i][0]
-    return jsonify(dict_)
+    return list(dict_.values())
 
 
 
