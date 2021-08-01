@@ -22,21 +22,21 @@ connect = psycopg2.connect(database=url.path[1:],
 cur = connect.cursor()
 cur.execute("select * from Station")
 data = cur.fetchall()
-print(data)
 
-@app.route('/CheckLogin', methods=['POST'])
+@app.route('/CheckLogin', methods=['GET', 'POST'])
 def CheckLogin():
     id = request.args.get('Id')
     pw = request.args.get('Password')
     print(id, pw)
     cur.execute("select * from customer where customer_id='{}' and password='{}'".format(id, pw))
     data = cur.fetchall()
+
     if len(data) == 1:
         return jsonify({'result_code': 1})
     else:
         return jsonify({'result_code': 0})
 
-@app.route('/GetMemberInfo', methods=['POST'])
+@app.route('/GetMemberInfo', methods=['GET', 'POST'])
 def GetMemberInfo():
     id = request.args.get('Id')
     cur.execute("select * from customer where customer_id='{}'".format(id))
@@ -47,7 +47,7 @@ def GetMemberInfo():
     return jsonify({'name': name,
                     'car_models': car_model})
 
-@app.route('/GetCarInfo', methods=['POST'])
+@app.route('/GetCarInfo', methods=['GET', 'POST'])
 def GetChargeResult():
     id = request.args.get('Id')
     cur.execute("select * from ServiceReservation where customer_id='{}".format(id))
@@ -69,7 +69,7 @@ def GetChargeResult():
     })
 
 
-@app.route('/SetSignUpInfo', methods=['POST'])
+@app.route('/SetSignUpInfo', methods=['GET', 'POST'])
 def SetSignUpInfo():
     name = request.args.get('Name')
     id = request.args.get('Id')
@@ -82,7 +82,7 @@ def SetSignUpInfo():
     except:
         return jsonify({'result_code': 0})
 
-@app.route('/GetCarCompanyInfo', methods=['GET'])
+@app.route('/GetCarCompanyInfo', methods=['GET', 'POST'])
 def GetCarCompanyInfo():
     dict_ = {}
     cur.execute("select distinct manufacturer from carmodel")
@@ -93,7 +93,7 @@ def GetCarCompanyInfo():
 
 
 
-@app.route('/GetCarModelInfo', methods=['POST'])
+@app.route('/GetCarModelInfo', methods=['GET', 'POST'])
 def GetCarModelInfo():
     dict_ = {}
     company = request.args.get('Car_company')
@@ -103,7 +103,7 @@ def GetCarModelInfo():
         dict_["model_{}".format(i)] = data[i][0]
     return jsonify(dict_)
 
-@app.route('/GetStationInfo', methods=['POST'])
+@app.route('/GetStationInfo', methods=['GET', 'POST'])
 def GetStationInfo():
     dict_ = {}
     cur.execute("select station_id, station_name, slow_charger, fast_charger, dx, dy")
