@@ -84,30 +84,20 @@ def SetSignUpInfo():
 
 @app.route('/GetCarCompanyInfo', methods=['GET', 'POST'])
 def GetCarCompanyInfo():
-    dict_ = {}
     cur.execute("select distinct manufacturer from carmodel")
     data = cur.fetchall()
-    dict_["manufacturers"] = []
-    for i in range(len(data)):
-        dict_["manufacturers"].append(
-            jsonify({"manufacturer": data[i][0]})
-        )
-    return jsonify(dict_)
+    dict_ = jsonify(manufacturer=[dict(model=data[i][0]) for i in range(len(data))])
+    return dict_
 
 
 
 @app.route('/GetCarModelInfo', methods=['GET', 'POST'])
 def GetCarModelInfo():
-    dict_ = {}
     company = request.args.get('Car_company')
     cur.execute("select car_model from CarModel where manufacturer='{}'".format(company))
     data = cur.fetchall()
-    dict_['models'] = []
-    for i in range(len(data)):
-        dict_['models'].append(
-            jsonify({'model': data[i][0]})
-        )
-    return jsonify(dict_)
+    dict_ = jsonify(models=[dict(model=data[i][0]) for i in range(len(data))])
+    return dict_
 
 @app.route('/GetStationInfo', methods=['GET', 'POST'])
 def GetStationInfo():
