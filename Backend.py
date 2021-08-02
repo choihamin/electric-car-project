@@ -108,7 +108,7 @@ def GetStationInfo():
         df=data,
         properties=['station_id', 'station_name', 'slow_charger', 'fast_charger'],
         lat='dx',
-        lng='dy',
+        lon='dy',
         precision=5,
         filename='station.geojson'
     )
