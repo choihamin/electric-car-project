@@ -76,7 +76,7 @@ def SetSignUpInfo():
     name = request.args.get('Name')
     car_model = request.args.get('Car_model')
     try:
-        cur.execute("insert into customer values('{}','{}','{}','{}')".format(id, pw, name, car_model))
+        cur.execute("insert into customer values('{}','{}','{}',{})".format(id, pw, name, int(car_model)))
         connect.commit()
         return jsonify({'result_code': 1})
     except:
@@ -101,8 +101,7 @@ def GetCarModelInfo():
 
 @app.route('/GetStationInfo', methods=['GET', 'POST'])
 def GetStationInfo():
-    dict_ = {}
-    cur.execute("select station_id, station_name, slow_charger, fast_charger, dx, dy")
+    cur.execute("select station_id, station_name, slow_charger, fast_charger, dx, dy from Station")
     data = cur.fetchall()
     data = pd.DataFrame(data, columns=['station_id', 'station_name', 'slow_charger', 'fast_charger', 'dx', 'dy'])
     geo_data = df_to_geojson(
