@@ -86,7 +86,7 @@ def SetSignUpInfo():
 def GetCarCompanyInfo():
     cur.execute("select distinct manufacturer from carmodel")
     data = cur.fetchall()
-    dict_ = jsonify(manufacturer=[dict(model=data[i][0]) for i in range(len(data))])
+    dict_ = jsonify(manufacturers=[dict(manufacturer=data[i][0]) for i in range(len(data))])
     return dict_
 
 
