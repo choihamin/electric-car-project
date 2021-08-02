@@ -39,13 +39,15 @@ def CheckLogin():
 @app.route('/GetMemberInfo', methods=['GET', 'POST'])
 def GetMemberInfo():
     id = request.args.get('Id')
-    cur.execute("select * from customer where customer_id='{}'".format(id))
+    cur.execute("select customer_name, car_model_name, efficiency from Customer natural join CarModel where customer_id='{}'".format(id))
     data = cur.fetchall()
-    name = data[0][2]
-    car_model = data[0][3]
+    name = data[0][0]
+    car_model = data[0][1]
+    efficiency = data[0][2]
 
     return jsonify({'name': name,
-                    'car_models': car_model})
+                    'car_model_name': car_model,
+                    'efficiency': efficiency})
 
 @app.route('/GetCarInfo', methods=['GET', 'POST'])
 def GetChargeResult():
