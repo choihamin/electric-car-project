@@ -71,9 +71,9 @@ def GetChargeResult():
 
 @app.route('/SetSignUpInfo', methods=['GET', 'POST'])
 def SetSignUpInfo():
-    name = request.args.get('Name')
     id = request.args.get('Id')
     pw = request.args.get('Password')
+    name = request.args.get('Name')
     car_model = request.args.get('Car_model')
     try:
         cur.execute("insert into customer values('{}','{}','{}','{}')".format(id, pw, name, car_model))
@@ -94,9 +94,9 @@ def GetCarCompanyInfo():
 @app.route('/GetCarModelInfo', methods=['GET', 'POST'])
 def GetCarModelInfo():
     company = request.args.get('Car_company')
-    cur.execute("select car_model from CarModel where manufacturer='{}'".format(company))
+    cur.execute("select car_model_id, car_model_name from CarModel where manufacturer='{}'".format(company))
     data = cur.fetchall()
-    dict_ = jsonify(models=[dict(model=data[i][0]) for i in range(len(data))])
+    dict_ = jsonify(models=[dict(model_id=data[i][0], model_name=data[i][1]) for i in range(len(data))])
     return dict_
 
 @app.route('/GetStationInfo', methods=['GET', 'POST'])
