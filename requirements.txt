@@ -8,18 +8,18 @@ backcall==0.2.0
 beautifulsoup4==4.9.3
 cachetools==4.1.1
 certifi==2021.5.30
-cftime @ file:///D:/bld/cftime_1621553898752/work
+cftime==1.5.0
 charset-normalizer==2.0.3
 chroma-py==0.1.0.dev1
 click==8.0.1
-colorama @ file:///home/conda/feedstock_root/build_artifacts/colorama_1602866480661/work
+colorama==0.4.4
 colour==0.1.5
-convertdate @ file:///home/conda/feedstock_root/build_artifacts/convertdate_1615678826465/work
+convertdate==2.3.2
 cycler==0.10.0
 Cython==0.29.23
 decorator==5.0.9
-ephem @ file:///D:/bld/ephem_1623723200405/work
-fbprophet @ file:///D:/bld/fbprophet_1599365723319/work
+ephem==4.0.0.2
+fbprophet==0.7.1
 Flask==2.0.1
 flask-restx==0.5.0
 flatbuffers==1.12
@@ -31,8 +31,8 @@ google-pasta==0.2.0
 greenlet==1.1.0
 grpcio==1.34.1
 gunicorn==20.1.0
-hijri-converter @ file:///home/conda/feedstock_root/build_artifacts/hijri-converter_1624318587407/work
-holidays @ file:///home/conda/feedstock_root/build_artifacts/holidays_1626824287322/work
+hijri-converter==2.1.3
+holidays==0.11.2
 idna==3.2
 importlib-metadata==4.6.1
 ipython==7.25.0
@@ -42,56 +42,59 @@ jedi==0.18.0
 Jinja2==3.0.1
 jsonschema==3.2.0
 keras-resnet==0.2.0
-kiwisolver @ file:///D:/bld/kiwisolver_1610099949969/work
-korean-lunar-calendar @ file:///home/conda/feedstock_root/build_artifacts/korean_lunar_calendar_1589354365811/work
+kiwisolver==1.3.1
+korean-lunar-calendar==0.2.1
 LunarCalendar==0.0.9
 mapboxgl==0.10.2
 Markdown==3.3.4
 MarkupSafe==2.0.1
-matplotlib @ file:///D:/bld/matplotlib-suite_1620506183901/work
+matplotlib==3.4.2
 matplotlib-inline==0.1.2
-netCDF4 @ file:///D:/bld/netcdf4_1624308493434/work
-numpy @ file:///D:/bld/numpy_1626648573548/work
+netCDF4==1.5.7
+numpy==1.21.1
 oauthlib==3.1.0
-olefile @ file:///home/conda/feedstock_root/build_artifacts/olefile_1602866521163/work
+olefile==0.46
 opencv-python==4.5.2.52
 opt-einsum==3.3.0
-packaging @ file:///home/conda/feedstock_root/build_artifacts/packaging_1625323647219/work
-pandas @ file:///D:/bld/pandas_1627224175793/work
+packaging==21.0
+pandas==1.3.1
 parso==0.8.2
 pickleshare==0.7.5
 Pillow==8.2.0
+pip==21.1.3
 progressbar2==3.53.1
 prompt-toolkit==3.0.19
 psycopg2==2.9.1
 pyasn1==0.4.8
 pyasn1-modules==0.2.8
 Pygments==2.9.0
-PyMeeus @ file:///home/conda/feedstock_root/build_artifacts/pymeeus_1615809745702/work
+PyMeeus==0.5.10
 pyparsing==2.4.7
 pyrsistent==0.18.0
 pystan==2.19.1.1
-python-dateutil @ file:///home/conda/feedstock_root/build_artifacts/python-dateutil_1626286286081/work
+python-dateutil==2.8.2
 python-utils==2.5.6
-pytz @ file:///home/conda/feedstock_root/build_artifacts/pytz_1612179539967/work
+pytz==2021.1
 requests==2.26.0
 requests-oauthlib==1.3.0
 rsa==4.6
 schedule==1.1.0
 scipy==1.4.1
-six @ file:///home/conda/feedstock_root/build_artifacts/six_1620240208055/work
+setuptools==52.0.0.post20210125
+six==1.16.0
 soupsieve==2.2.1
 SQLAlchemy==1.4.22
-tornado @ file:///D:/bld/tornado_1610094878337/work
-tqdm @ file:///home/conda/feedstock_root/build_artifacts/tqdm_1627689047698/work
+tornado==6.1
+tqdm==4.62.0
 traitlets==5.0.5
-typing-extensions @ file:///home/conda/feedstock_root/build_artifacts/typing_extensions_1622748266870/work
+typing-extensions==3.10.0.0
 tzlocal==2.1
 urllib3==1.26.6
 waitress==2.0.0
 wcwidth==0.2.5
 Werkzeug==2.0.1
+wheel==0.36.2
 wincertstore==0.2
 wrapt==1.12.1
-xarray @ file:///home/conda/feedstock_root/build_artifacts/xarray_1627311788418/work
+xarray==0.19.0
 zipp==3.5.0
