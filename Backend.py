@@ -265,8 +265,8 @@ def GetStationInfo():
 if __name__ == "__main__":
     sched = BackgroundScheduler()
     sched.add_job(prophet_1hour, 'interval', minutes=60)
-    sched.add_job(return_supp, 'interval', ['HourData'], minutes=60)
-    sched.add_job(return_supp, 'interval', ['LpData'], minutes=15)
+    sched.add_job(return_supp, 'interval', args = ['HourData'], minutes=60)
+    sched.add_job(return_supp, 'interval', args = ['LpData'], minutes=15)
 
     app.run(Debug=True, host='0.0.0.0')
 
