@@ -239,28 +239,6 @@ def GetStationInfo():
         print(1)
     return data
 
-@app.route('/GetStationInfo', methods=['GET', 'POST'])
-def GetStationInfo():
-    cur.execute("select station_id, station_name, slow_charger, fast_charger, dx, dy from Station")
-    data = cur.fetchall()
-    data = pd.DataFrame(data, columns=['station_id', 'station_name', 'slow_charger', 'fast_charger', 'dx', 'dy'])
-    geo_data = df_to_geojson(
-        df=data,
-        properties=['station_id', 'station_name', 'slow_charger', 'fast_charger'],
-        lat='dx',
-        lon='dy',
-        precision=5,
-        filename='station.geojson'
-    )
-    path = 'station.geojson'
-    with open(path) as f:
-        data = json.loads(f.read())
-        print(1)
-    return data
-
-
-
-
 
 if __name__ == "__main__":
     sched = BackgroundScheduler()
