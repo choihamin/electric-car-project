@@ -6,8 +6,12 @@ from flask_restx import Api, Resource
 from mapboxgl.utils import df_to_geojson
 import json
 import pandas as pd
+import uuid
+import logging, time
+from apscheduler.schedulers.background import BackgroundScheduler
 
 app=Flask(__name__)
+logging = logging.getLogger(__name__)
 app.config['JSON_AS_ASCII'] = False
 api = Api(app)
 
@@ -23,6 +27,97 @@ cur = connect.cursor()
 cur.execute("select * from Station")
 data = cur.fetchall()
 
+def prophet_1hour():
+    import pandas as pd
+    from fbprophet import Prophet
+
+    cur.execute("select * from HourData")
+    trade_train = cur.fetchall()
+    trade_train = pd.DataFrame(data=trade_train, columns=['lp_time datetime', 'supp_reserve_pwr'])
+    trade_train['lp_time datetime'] = pd.to_datetime(trade_train['lp_time datetime'], format='%Y-%m-%d-%H-%M-%S')
+    prophet_data = trade_train.rename(columns={'lp_time datetime': 'ds', 'supp_reserve_pwr': 'y'})
+
+    m = Prophet(yearly_seasonality=False, weekly_seasonality=True, daily_seasonality=True, growth='logistic',
+                changepoint_prior_scale=0.1)
+    prophet_data['cap'] = 1000000
+    prophet_data['floor'] = 0
+
+    m.fit(prophet_data)
+
+    # 144 period = 144시간 = 7일 뒤 데이터까지 분석
+    future = m.make_future_dataframe(periods=144, freq='H')
+    future['cap'] = 1000000
+    future['floor'] = 0
+    forecast = m.predict(future)
+
+    time = seven_day_after_forecast = forecast['ds'][len(forecast['ds']) - 1]
+    time = time.strftime("%Y-%m-%d %H:%M:%S")
+    seven_day_after_yhat = forecast['yhat'][len(forecast['yhat']) - 1]
+    seven_day_after_yhat_upper = forecast['yhat_upper'][len(forecast['yhat_upper']) - 1]
+    seven_day_after_yhat_lower = forecast['yhat_lower'][len(forecast['yhat_lower']) - 1]
+
+    cur.execute("select * from Prophet")
+    data = cur.fetchall()
+
+    try:
+        first_idx = data[0][0]
+        if len(data) > 500:
+            cur.execute("delete from Prophet where lp_time_datetime='{}'".format(first_idx))
+        sql = "insert into Prophet values('{}',{},{},{})"
+        cur.execute(sql.format(time, seven_day_after_yhat, seven_day_after_yhat_upper, seven_day_after_yhat_lower))
+        connect.commit()
+        return 1
+    except:
+        return 0
+
+
+# api 호출을 통한 데이터 파싱
+def return_supp(table):
+    import requests, bs4
+    from urllib.parse import urlencode, quote_plus, unquote
+
+    url = 'https://openapi.kpx.or.kr/openapi/chejusukub5mToday/getChejuSukub5mToday'
+    queryParams = '?' + urlencode({quote_plus(
+        'ServiceKey'): 'cgPcAXpDDuaSdniUhHGNmo3Crgs6NJL3VmR7sOFJ/4yj3KRs/ywyhijGQFORMeyBVvscFlg4Np/GHieko5d1NQ=='})
+
+    response = requests.get(url + queryParams).text.encode('utf-8')
+    xmlobj = bs4.BeautifulSoup(response, 'lxml-xml')
+
+    # item 다 가져옴
+    items = xmlobj.findAll('item')
+
+    # item중 마지막 데이터 = 호출한 시점의 데이터
+    last_item = items[-1]
+
+    # datetime = 데이터 시간
+    datetime = last_item.baseDatetime.text
+    datetime = datetime[0:4] + "-" + datetime[4:6] + "-" + datetime[6:8] + " " + datetime[8:10] + ":" + datetime[
+                                                                                                        10:12] + ":" + datetime[                                                                                                                  12:]
+    # suppReservePwr = 공급예비력 = 공급능력 - 현재수요
+    suppReservePwr = float(last_item.suppAbility.text) - float(last_item.currPwrTot.text)
+
+    cur.execute("select * from HourData")
+    data = cur.fetchall()
+
+    if table == 'HourData':
+        length = 576
+    elif table == 'LpData':
+        length = 96
+    try:
+        first_idx = data[0][0]
+        if len(data) > length:
+            cur.execute("delete from HourData where lp_time_datetime='{}'".format(first_idx))
+        sql = "insert into {} values('{}',{})"
+        cur.execute(sql.format(table, datetime, suppReservePwr))
+        connect.commit()
+        return 1
+    except:
+        return 0
+
+
+
+
+
 @app.route('/CheckLogin', methods=['GET', 'POST'])
 def CheckLogin():
     id = request.args.get('Id')
@@ -36,14 +131,38 @@ def CheckLogin():
     else:
         return jsonify({'result_code': 0})
 
-@app.route('/GetMemberInfo', methods=['GET', 'POST'])
-def GetMemberInfo():
+@app.route('/SetReserveInfo', methods=['GET', 'POST'])
+def SetReserveInfo():
+    reserve_id = str(uuid.uuid4())
     id = request.args.get('Id')
-    cur.execute("select customer_name, car_model_name, efficiency from Customer natural join CarModel where customer_id='{}'".format(id))
+    station_id = request.args.get('StationId')
+    start_time = request.args.get('StartTime')
+    finish_time = request.args.get('FinishTime')
+    minimum_cap = request.args.get('MinimumCap')
+    reserve_type = request.args.get('ReserveType')
+    current_cap = request.args.get('CurrentCap') # 나중에 없앨 부분
+    expected_fee = 1
+
+    sql = "insert into ServiceReservation values('{}','{}','{}','{}','{}',{},{},{},{},'{}')"
+    cur.execute(sql.format())
+
+
+
+@app.route('/GetHomeInfo', methods=['GET', 'POST'])
+def GetHomeInfo():
+    id = request.args.get('Id')
+    cur.execute("select * from Customer natural join CarModel where customer_id='{}'".format(id))
     data = cur.fetchall()
-    name = data[0][0]
-    car_model = data[0][1]
-    efficiency = data[0][2]
+    name = data[0][3]
+    car_model = data[0][0]
+    battery_capacity = data[0][5] # 차량 배터리용량
+    efficiency = data[0][6]       # 연비
+
+
+    cur.execute("select service_id, ")
+
+
+    cur.execute("select * from (Customer natural join CarModel) natural join service")
 
     return jsonify({'name': name,
                     'car_model_name': car_model,
@@ -120,10 +239,35 @@ def GetStationInfo():
         print(1)
     return data
 
+@app.route('/GetStationInfo', methods=['GET', 'POST'])
+def GetStationInfo():
+    cur.execute("select station_id, station_name, slow_charger, fast_charger, dx, dy from Station")
+    data = cur.fetchall()
+    data = pd.DataFrame(data, columns=['station_id', 'station_name', 'slow_charger', 'fast_charger', 'dx', 'dy'])
+    geo_data = df_to_geojson(
+        df=data,
+        properties=['station_id', 'station_name', 'slow_charger', 'fast_charger'],
+        lat='dx',
+        lon='dy',
+        precision=5,
+        filename='station.geojson'
+    )
+    path = 'station.geojson'
+    with open(path) as f:
+        data = json.loads(f.read())
+        print(1)
+    return data
+
+
 
 
 
 if __name__ == "__main__":
+    sched = BackgroundScheduler()
+    sched.add_job(prophet_1hour, 'interval', minutes=60)
+    sched.add_job(return_supp, 'interval', ['HourData'], minutes=60)
+    sched.add_job(return_supp, 'interval', ['LpData'], minutes=15)
+
     app.run(Debug=True, host='0.0.0.0')
 
 
