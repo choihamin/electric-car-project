@@ -145,7 +145,6 @@ def CheckLogin():
     else:
         return jsonify({'result_code': 0})
 
-
 @app.route('/GetHomeInfo', methods=['GET', 'POST'])
 def GetHomeInfo():
     id = request.args.get('Id')
