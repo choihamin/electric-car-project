@@ -81,7 +81,7 @@ def return_supp(table):
     url = 'https://openapi.kpx.or.kr/openapi/chejusukub5mToday/getChejuSukub5mToday'
     queryParams = '?' + urlencode({quote_plus(
         'ServiceKey'): 'cgPcAXpDDuaSdniUhHGNmo3Crgs6NJL3VmR7sOFJ/4yj3KRs/ywyhijGQFORMeyBVvscFlg4Np/GHieko5d1NQ=='})
-
+    time.sleep(3)
     response = requests.get(url + queryParams).text.encode('utf-8')
     xmlobj = bs4.BeautifulSoup(response, 'lxml-xml')
 
@@ -149,14 +149,14 @@ def CheckLogin():
 @app.route('/GetHomeInfo', methods=['GET', 'POST'])
 def GetHomeInfo():
     id = request.args.get('Id')
-    try:
-        cur.execute("select * from Customer natural join CarModel where customer_id='{}'".format(id))
-        data = cur.fetchall()
-        name = data[0][3]
-        car_model = data[0][0]
-        battery_capacity = data[0][5] # 차량 배터리용량
-        efficiency = data[0][6]       # 연비
+    cur.execute("select * from Customer natural join CarModel where customer_id='{}'".format(id))
+    data = cur.fetchall()
+    name = data[0][3]
+    car_model = data[0][0]
+    battery_capacity = data[0][5] # 차량 배터리용량
+    efficiency = data[0][6]       # 연비
 
+    try:
         cur.execute("select reserve_id, reserve_time, finish_time, station_name, is_paid from ServiceReservation natural join Station where customer_id='{}'".format(id))
         target = cur.fetchall()[-1]
         current_capacity = "몰라"
@@ -177,7 +177,11 @@ def GetHomeInfo():
                         'finish_time': end_time,
                         'station_name':station_name})
     except:
-        return jsonify({'result_code': 0})
+        return jsonify({'name': name,
+                        'car_model_name': car_model,
+                        'efficiency': efficiency,
+                        'battery_capacity': battery_capacity,
+                        'current_capacity': current_capacity})
 
 
 
@@ -281,9 +285,9 @@ def GetCarModelInfo():
 
 @app.route('/GetStationInfo', methods=['GET', 'POST'])
 def GetStationInfo():
-    cur.execute("select station_id, station_name, slow_charger, fast_charger, dx, dy from Station")
+    cur.execute("select station_id, station_name, slow_charger, fast_charger, dx, dy, v2g from Station")
     data = cur.fetchall()
-    data = pd.DataFrame(data, columns=['station_id', 'station_name', 'slow_charger', 'fast_charger', 'dx', 'dy'])
+    data = pd.DataFrame(data, columns=['station_id', 'station_name', 'slow_charger', 'fast_charger', 'dx', 'dy', 'v2g'])
     geo_data = df_to_geojson(
         df=data,
         properties=['station_id', 'station_name', 'slow_charger', 'fast_charger'],
