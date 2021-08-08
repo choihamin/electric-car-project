@@ -145,22 +145,6 @@ def CheckLogin():
     else:
         return jsonify({'result_code': 0})
 
-@app.route('/SetReserveInfo', methods=['GET', 'POST'])
-def SetReserveInfo():
-    reserve_id = str(uuid.uuid4())
-    id = request.args.get('Id')
-    station_id = request.args.get('StationId')
-    start_time = request.args.get('StartTime')
-    finish_time = request.args.get('FinishTime')
-    minimum_cap = request.args.get('MinimumCap')
-    reserve_type = request.args.get('ReserveType')
-    current_cap = request.args.get('CurrentCap') # 나중에 없앨 부분
-    expected_fee = 1
-
-    sql = "insert into ServiceReservation values('{}','{}','{}','{}','{}',{},{},{},{},'{}')"
-    cur.execute(sql.format())
-
-
 
 @app.route('/GetHomeInfo', methods=['GET', 'POST'])
 def GetHomeInfo():
@@ -193,7 +177,7 @@ def GetHomeInfo():
                         'finish_time': end_time,
                         'station_name':station_name})
     except:
-        return -1
+        return jsonify({'result_code': 0})
 
 
 
@@ -201,7 +185,7 @@ def GetHomeInfo():
 def GetChargeInfo():
     id = request.args.get('Id')
     try:
-        cur.execute("select reserve_type, end_time, expected_fee, dx, dy from ServiceReservation natural join Station where reserve_id='{}".format(id))
+        cur.execute("select reserve_type, finish_time, expected_fee, dx, dy from ServiceReservation natural join Station where reserve_id='{}".format(id))
         data = cur.fetchall()[-1]
         reserve_type = data[0]
         finish_time = data[1]
@@ -217,18 +201,18 @@ def GetChargeInfo():
             'dy': dy
         })
     except:
-        return -1
+        return jsonify({'result_code': 0})
 
 @app.route('/StopCharge', methods=['GET', 'POST'])
 def StopCharge():
     id = request.args.get('Service_reservation_id')
     try:
-        cur.execute("update ServiceReservation set end_time=now() where reserve_id = '{}'".format(id))
+        cur.execute("update ServiceReservation set finish_time=now() where reserve_id = '{}'".format(id))
         connect.commit()
-        return 1
+        return jsonify({'result_code': 1})
 
     except:
-        return 0
+        return jsonify({'result_code': 0})
 
 @app.route('/GetChargeHistory', methods=['GET', 'POST'])
 def GetChargeHistory():
@@ -239,7 +223,7 @@ def GetChargeHistory():
         dict_ = jsonify(list_history=[dict(reserve_time=data[i][0], reserve_type=data[i][1], expected_fee=data[i][2]) for i in range(len(data))])
         return dict_
     except:
-        return -1
+        return jsonify({'result_code': 0})
 
 @app.route('/GetChargeResult', methods=['GET','POST'])
 def GetChargeResult():
@@ -249,19 +233,23 @@ def GetChargeResult():
         target = cur.fetchall()
         return jsonify({'expected_fee': target[0]})
     except:
-        return -1
+        return jsonify({'result_code': 0})
 
-@app.route('/GetCarCompanyInfo', methods=['GET', 'POST'])
-def GetCarCompanyInfo():
-    cur.execute("select distinct manufacturer from carmodel")
-    data = cur.fetchall()
-    dict_ = jsonify(manufacturers=[dict(manufacturer=data[i][0]) for i in range(len(data))])
-    return dict_
+
+@app.route('/SetServicePaid', methods=['GET','POST'])
+def SetServicePaid():
+    id = request.args.get('Service_reservation_id')
+    try:
+        cur.execute("update ServiceReservation set is_paid = 1 where id='{}'".format(id))
+        connect.commit()
+        return jsonify({'result_code': 1})
+    except:
+        return jsonify({'result_code': 0})
 
 
 @app.route('/SetSignUpInfo', methods=['GET', 'POST'])
 def SetSignUpInfo():
-    id = request.args.get('Service_reservation_id')
+    id = request.args.get('Id')
     pw = request.args.get('Password')
     name = request.args.get('Name')
     car_model = request.args.get('Car_model')
@@ -272,6 +260,15 @@ def SetSignUpInfo():
     except:
         return jsonify({'result_code': 0})
 
+@app.route('/GetCarCompanyInfo', methods=['GET','POST'])
+def GetCarCompanyInfo():
+    try:
+        cur.execute("select distinct manufacturer from CarModel")
+        data = cur.fetchall()
+        dict_ = jsonify(manufacturers=[dict(manufacturer = data[i][0]) for i in range(len(data))])
+        return dict_
+    except:
+        return jsonify({'result_code': 0})
 
 
 @app.route('/GetCarModelInfo', methods=['GET', 'POST'])
@@ -300,6 +297,58 @@ def GetStationInfo():
         data = json.loads(f.read())
         print(1)
     return data
+
+@app.route('/SetReserveInfo', methods=['GET', 'POST'])
+def SetReserveInfo():
+    # param get
+    id = request.args.get('Id')
+    station_id = request.args.get('StationId')
+    reserve_type = request.args.get('ReserveType')
+    reserve_time = request.args.get('StartTime')
+    finish_time = request.args.get('FinishTime')
+    minimum_cap = request.args.get('MinimumCap')
+    current_cap = request.args.get('CurrentCap') # 나중에 없앨 부분
+
+
+    # calculate expected_fee
+    try:
+        cur.execute("select * from HourData")
+        HD_target = cur.fetchall()[-1]
+        date = HD_target[0]
+        supp_reserve_pwer = HD_target[1]
+
+        cur.execute("select * from Prophet where lp_time_datetime='{}'".format(date))
+        PP_target = cur.fetchall()[-1]
+        yhat = PP_target[1]
+        yhat_upper = PP_target[2]
+        yhat_lower = PP_target[3]
+
+        now = datetime.datetime.now()
+        seasonTime = str(int(now.strftime('%m%H')))
+        cur.execute("select fee from SeasonTime natural join LoadFee where season_time_id=''".format(seasonTime))
+        fee = cur.fetchall()[0]
+
+        if supp_reserve_pwer > yhat_upper:
+            expected_fee = fee * 0.8
+        elif supp_reserve_pwer < yhat_lower:
+            expected_fee = fee * 1.2
+        else:
+            expected_fee = fee * (((100 + yhat - supp_reserve_pwer)*20/(yhat_upper - yhat))/100)
+
+    except:
+        expected_fee = -1
+    # insert tuple
+    try:
+        reserve_id = str(uuid.uuid4())
+        sql = "insert into ServiceReservation values('{}','{}','{}','{}','{}',{},{},{},{})"
+        cur.execute(sql.format(reserve_id, id, station_id, reserve_time, finish_time, minimum_cap, reserve_type, expected_fee, 0))
+        connect.commit()
+        return jsonify({'service_reservation_id': reserve_id,
+                        'expected_fee': expected_fee})
+    except:
+        return jsonify({'result_code': 0})
+
+
 
 sched = BackgroundScheduler()
 sched.start()
