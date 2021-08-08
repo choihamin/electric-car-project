@@ -165,48 +165,103 @@ def SetReserveInfo():
 @app.route('/GetHomeInfo', methods=['GET', 'POST'])
 def GetHomeInfo():
     id = request.args.get('Id')
-    cur.execute("select * from Customer natural join CarModel where customer_id='{}'".format(id))
-    data = cur.fetchall()
-    name = data[0][3]
-    car_model = data[0][0]
-    battery_capacity = data[0][5] # 차량 배터리용량
-    efficiency = data[0][6]       # 연비
+    try:
+        cur.execute("select * from Customer natural join CarModel where customer_id='{}'".format(id))
+        data = cur.fetchall()
+        name = data[0][3]
+        car_model = data[0][0]
+        battery_capacity = data[0][5] # 차량 배터리용량
+        efficiency = data[0][6]       # 연비
+
+        cur.execute("select reserve_id, reserve_time, finish_time, station_name, is_paid from ServiceReservation natural join Station where customer_id='{}'".format(id))
+        target = cur.fetchall()[-1]
+        current_capacity = "몰라"
+        service_reservation_id = target[0]
+        start_time = target[1]
+        end_time = target[2]
+        station_name = target[3]
+        is_paid = target[4]
+
+        return jsonify({'name': name,
+                        'car_model_name': car_model,
+                        'efficiency': efficiency,
+                        'battery_capacity': battery_capacity,
+                        'current_capacity': current_capacity,
+                        'is_paid': is_paid,
+                        'service_reservation_id': service_reservation_id,
+                        'start_time': start_time,
+                        'finish_time': end_time,
+                        'station_name':station_name})
+    except:
+        return -1
 
 
-    cur.execute("select service_id, ")
 
-
-    cur.execute("select * from (Customer natural join CarModel) natural join service")
-
-    return jsonify({'name': name,
-                    'car_model_name': car_model,
-                    'efficiency': efficiency})
-
-@app.route('/GetCarInfo', methods=['GET', 'POST'])
-def GetChargeResult():
+@app.route('/GetChargeInfo', methods=['GET', 'POST'])
+def GetChargeInfo():
     id = request.args.get('Id')
-    cur.execute("select * from ServiceReservation where customer_id='{}".format(id))
-    data = cur.fetchall()[-1]
-    current_capacity = '몰라'
-    seq_reserve = data[0]
-    reserve_type = data[6]
-    reserve_time = data[3]
-    finish_time = data[4]
-    min_capacity = data[5]
+    try:
+        cur.execute("select reserve_type, end_time, expected_fee, dx, dy from ServiceReservation natural join Station where reserve_id='{}".format(id))
+        data = cur.fetchall()[-1]
+        reserve_type = data[0]
+        finish_time = data[1]
+        expected_fee = data[2]
+        dx = data[3]
+        dy = data[4]
 
-    return jsonify({
-        'current_capacity': current_capacity,
-        'seq_reserve': seq_reserve,
-        'reserve_type': reserve_type,
-        'reserve_time': reserve_time,
-        'finish_time': finish_time,
-        'min_capacity': min_capacity
-    })
+        return jsonify({
+            'reserve_type': reserve_type,
+            'finish_time': finish_time,
+            'expected_fee': expected_fee,
+            'dx': dx,
+            'dy': dy
+        })
+    except:
+        return -1
+
+@app.route('/StopCharge', methods=['GET', 'POST'])
+def StopCharge():
+    id = request.args.get('Service_reservation_id')
+    try:
+        cur.execute("update ServiceReservation set end_time=now() where reserve_id = '{}'".format(id))
+        connect.commit()
+        return 1
+
+    except:
+        return 0
+
+@app.route('/GetChargeHistory', methods=['GET', 'POST'])
+def GetChargeHistory():
+    id = request.args.get('Id')
+    try:
+        cur.execute("select reserve_time, reserve_type, expected_fee from ServiceReservation from customer_id='{}'".format(id))
+        data = cur.fetchall()
+        dict_ = jsonify(list_history=[dict(reserve_time=data[i][0], reserve_type=data[i][1], expected_fee=data[i][2]) for i in range(len(data))])
+        return dict_
+    except:
+        return -1
+
+@app.route('/GetChargeResult', methods=['GET','POST'])
+def GetChargeResult():
+    id = request.args.get('Service_reservation_id')
+    try:
+        cur.execute("select expected_fee from ServiceReservation where reserve_id='{}'".format(id))
+        target = cur.fetchall()
+        return jsonify({'expected_fee': target[0]})
+    except:
+        return -1
+
+@app.route('/GetCarCompanyInfo', methods=['GET', 'POST'])
+def GetCarCompanyInfo():
+    cur.execute("select distinct manufacturer from carmodel")
+    data = cur.fetchall()
+    dict_ = jsonify(manufacturers=[dict(manufacturer=data[i][0]) for i in range(len(data))])
+    return dict_
 
 
 @app.route('/SetSignUpInfo', methods=['GET', 'POST'])
 def SetSignUpInfo():
-    id = request.args.get('Id')
+    id = request.args.get('Service_reservation_id')
     pw = request.args.get('Password')
     name = request.args.get('Name')
     car_model = request.args.get('Car_model')
@@ -216,13 +271,6 @@ def SetSignUpInfo():
         return jsonify({'result_code': 1})
     except:
         return jsonify({'result_code': 0})
-
-@app.route('/GetCarCompanyInfo', methods=['GET', 'POST'])
-def GetCarCompanyInfo():
-    cur.execute("select distinct manufacturer from carmodel")
-    data = cur.fetchall()
-    dict_ = jsonify(manufacturers=[dict(manufacturer=data[i][0]) for i in range(len(data))])
-    return dict_
 
 
 
