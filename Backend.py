@@ -30,7 +30,6 @@ cur = connect.cursor()
 
 
 def prophet_1hour():
-
     cur.execute("select * from HourData")
     trade_train = cur.fetchall()
     trade_train = pd.DataFrame(data=trade_train, columns=['lp_time datetime', 'supp_reserve_pwr'])
@@ -74,10 +73,7 @@ def prophet_1hour():
         print("prophet_1hour : Fail")
         return 0
 
-
-# api 호출을 통한 데이터 파싱
 def return_supp(table):
-
     url = 'https://openapi.kpx.or.kr/openapi/chejusukub5mToday/getChejuSukub5mToday'
     queryParams = '?' + urlencode({quote_plus('ServiceKey'): 'cgPcAXpDDuaSdniUhHGNmo3Crgs6NJL3VmR7sOFJ/4yj3KRs/ywyhijGQFORMeyBVvscFlg4Np/GHieko5d1NQ=='})
     response = requests.get(url + queryParams).text.encode('utf-8')
@@ -116,8 +112,6 @@ def return_supp(table):
         print(data)
         print("=====================================================================================")
         sql = "insert into {} values('{}',{})"
-        if time == data[-1][0]:
-            sql = "update {} supp_reserve_pwr = '{}' where lp_time_datetime='{}'"
         cur.execute(sql.format(table, datetime, suppReservePwr))
         connect.commit()
         print('return_supp : success')
@@ -178,7 +172,13 @@ def GetHomeInfo():
                         'car_model_name': car_model,
                         'efficiency': efficiency,
                         'battery_capacity': battery_capacity,
-                        'current_capacity': current_capacity})
+                        'current_capacity': current_capacity,
+                        'is_paid': -1,
+                        'service_reservation_id': -1,
+                        'start_time': -1,
+                        'finish_time': -1,
+                        'station_name': -1
+                        })
 
 
 
