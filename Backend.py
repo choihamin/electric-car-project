@@ -255,13 +255,9 @@ def GetStationInfo():
 
 sched = BackgroundScheduler()
 sched.start()
-sched.add_job(return_supp, 'cron', args=['HourData'], minutes='1', seconds='0', id="test_1")
-sched.add_job(return_supp, 'cron', args=['LpData'], minutes='3', seconds='0', id="test_2")
-sched.add_job(return_supp, 'cron', args=['LpData'], minutes='18', seconds='0', id="test_2")
-sched.add_job(return_supp, 'cron', args=['LpData'], minutes='33', seconds='0', id="test_2")
-sched.add_job(return_supp, 'cron', args=['LpData'], minutes='48', seconds='0', id="test_2")
-sched.add_job(prophet_1hour, 'cron', minutes='10', secondes='0', id="test_3")
-time.sleep(80)
+sched.add_job(return_supp, 'cron', args=['HourData'], minute='2', second='30', id="test_1")
+sched.add_job(return_supp, 'cron', args=['LpData'], minute='*/15', second='0', id="test_2")
+sched.add_job(prophet_1hour, 'cron', minutes='10', second='0', id="test_3")
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0')
