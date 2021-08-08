@@ -149,12 +149,12 @@ def CheckLogin():
 @app.route('/GetHomeInfo', methods=['GET', 'POST'])
 def GetHomeInfo():
     id = request.args.get('Id')
-    cur.execute("select * from Customer natural join CarModel where customer_id='{}'".format(id))
+    cur.execute("select customer_name, car_model_name, battery_capacity, efficiency from Customer natural join CarModel where customer_id='{}'".format(id))
     data = cur.fetchall()
-    name = data[0][3]
-    car_model = data[0][0]
-    battery_capacity = data[0][5] # 차량 배터리용량
-    efficiency = data[0][6]       # 연비
+    name = data[0][0]
+    car_model = data[0][1]
+    battery_capacity = data[0][2] # 차량 배터리용량
+    efficiency = data[0][3]       # 연비
 
     try:
         cur.execute("select reserve_id, reserve_time, finish_time, station_name, is_paid from ServiceReservation natural join Station where customer_id='{}'".format(id))
