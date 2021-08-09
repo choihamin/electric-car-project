@@ -375,6 +375,6 @@ sched.add_job(return_supp, 'cron', args=['LpData'], minute='50', second='0', id=
 sched.add_job(prophet_1hour, 'cron', minute='20', second='0', id="test_6")
 
 if __name__ == "__main__":
-    app.run()
+    app.run(host='0.0.0.0')
 
 
