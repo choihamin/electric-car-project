@@ -146,7 +146,7 @@ def GetHomeInfo():
     car_model = data[0][1]
     battery_capacity = data[0][2] # 차량 배터리용량
     efficiency = data[0][3]       # 연비
-    current_capacity = "몰라"
+    current_capacity = -1
 
     try:
         cur.execute("select reserve_id, reserve_time, finish_time, station_name, is_paid from ServiceReservation natural join Station where customer_id='{}'".format(id))
