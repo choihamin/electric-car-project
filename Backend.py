@@ -68,12 +68,17 @@ def prophet_1hour():
     print(time, seven_day_after_yhat, seven_day_after_yhat_upper, seven_day_after_yhat_lower)
 
     try:
-        first_idx = data[0][0]
         if len(data) > 500:
-            cur.execute("delete from Prophet where lp_time_datetime='{}'".format(first_idx))
-            connect.commit()
+            while len(data) > 500:
+                first_idx = data[0][0]
+                cur.execute("delete from Prophet where lp_time_datetime='{}'".format(first_idx))
+                connect.commit()
+                cur.execute("select * from Prophet")
+                data = cur.fetchall()
+        print('ㅋ')
         sql = "insert into Prophet values('{}',{},{},{})"
         cur.execute(sql.format(time, seven_day_after_yhat, seven_day_after_yhat_upper, seven_day_after_yhat_lower))
+        print('ㅋ2')
         connect.commit()
         print("prophet_1hour : success")
         return 1
