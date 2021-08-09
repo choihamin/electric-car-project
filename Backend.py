@@ -15,6 +15,8 @@ from fbprophet import Prophet
 from socket import timeout
 from urllib.error import HTTPError, URLError
 
+
+
 app=Flask(__name__)
 logging = logging.getLogger(__name__)
 app.config['JSON_AS_ASCII'] = False
@@ -22,7 +24,9 @@ api = Api(app)
 
 up.uses_netloc.append("postgres")
 os.environ["DATABASE_URL"] = "postgres://yadctsip:mvZ_FWEhIcFp4PCZMlzUtdZivUkj1IBG@arjuna.db.elephantsql.com/yadctsip"
+os.environ["LOAD_DATA_URL"] = 'https://openapi.kpx.or.kr/openapi/chejusukub5mToday/getChejuSukub5mToday?ServiceKey=cgPcAXpDDuaSdniUhHGNmo3Crgs6NJL3VmR7sOFJ/4yj3KRs/ywyhijGQFORMeyBVvscFlg4Np/GHieko5d1NQ=='
 url = up.urlparse(os.environ["DATABASE_URL"])
+url_load = up.urlparse(os.environ["LOAD_DATA_URL"])
 connect = psycopg2.connect(database=url.path[1:],
                         user=url.username,
                         password=url.password,
@@ -78,17 +82,15 @@ def prophet_1hour():
         return 0
 
 def return_supp(table):
-    url = 'https://openapi.kpx.or.kr/openapi/chejusukub5mToday/getChejuSukub5mToday'
-    key = 'cgPcAXpDDuaSdniUhHGNmo3Crgs6NJL3VmR7sOFJ/4yj3KRs/ywyhijGQFORMeyBVvscFlg4Np/GHieko5d1NQ=='
-
     try:
-        req = urllib.request.urlopen('{}?ServiceKey={}'.format(url, key), timeout=10).read().decode('utf-8')
+        req = urllib.request.urlopen(os.environ["LOAD_DATA_URL"], timeout=10).read().decode('utf-8')
     except (HTTPError, URLError) as error:
         logging.error('Data not retrieved because %s\nURL: %s', error, url)
     except timeout:
         logging.error('socket timed out - URL %s', url)
     else:
         logging.info('Access successful.')
+
     xmlobj = bs4.BeautifulSoup(req, 'lxml-xml')
 
     # item 다 가져옴
