@@ -9,7 +9,7 @@ import uuid
 import logging, time
 from apscheduler.schedulers.background import BackgroundScheduler
 import requests, bs4
-from urllib.parse import urlencode, quote_plus, unquote
+import urllib
 import pandas as pd
 from fbprophet import Prophet
 
@@ -75,9 +75,9 @@ def prophet_1hour():
 
 def return_supp(table):
     url = 'https://openapi.kpx.or.kr/openapi/chejusukub5mToday/getChejuSukub5mToday'
-    queryParams = '?' + urlencode({quote_plus('ServiceKey'): 'cgPcAXpDDuaSdniUhHGNmo3Crgs6NJL3VmR7sOFJ/4yj3KRs/ywyhijGQFORMeyBVvscFlg4Np/GHieko5d1NQ=='}, safe='/=')
-    response = requests.get(url + queryParams).text.encode('utf-8')
-    xmlobj = bs4.BeautifulSoup(response, 'lxml-xml')
+    key = 'cgPcAXpDDuaSdniUhHGNmo3Crgs6NJL3VmR7sOFJ/4yj3KRs/ywyhijGQFORMeyBVvscFlg4Np/GHieko5d1NQ=='
+    req = urllib.request.urlopen('{}?ServiceKey={}'.format(url, key,))
+    xmlobj = bs4.BeautifulSoup(req, 'lxml-xml')
 
     # item 다 가져옴
     items = xmlobj.findAll('item')
