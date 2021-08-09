@@ -75,7 +75,7 @@ def prophet_1hour():
 
 def return_supp(table):
     url = 'https://openapi.kpx.or.kr/openapi/chejusukub5mToday/getChejuSukub5mToday'
-    queryParams = '?' + urlencode({quote_plus('ServiceKey'): 'cgPcAXpDDuaSdniUhHGNmo3Crgs6NJL3VmR7sOFJ/4yj3KRs/ywyhijGQFORMeyBVvscFlg4Np/GHieko5d1NQ=='}, safe='/')
+    queryParams = '?' + urlencode({quote_plus('ServiceKey'): 'cgPcAXpDDuaSdniUhHGNmo3Crgs6NJL3VmR7sOFJ/4yj3KRs/ywyhijGQFORMeyBVvscFlg4Np/GHieko5d1NQ=='}, safe='/=')
     response = requests.get(url + queryParams).text.encode('utf-8')
     xmlobj = bs4.BeautifulSoup(response, 'lxml-xml')
 
