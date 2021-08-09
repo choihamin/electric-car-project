@@ -12,7 +12,8 @@ import requests, bs4
 import urllib
 import pandas as pd
 from fbprophet import Prophet
-import socket
+from socket import timeout
+from urllib.error import HTTPError, URLError
 
 app=Flask(__name__)
 logging = logging.getLogger(__name__)
@@ -77,7 +78,15 @@ def prophet_1hour():
 def return_supp(table):
     url = 'https://openapi.kpx.or.kr/openapi/chejusukub5mToday/getChejuSukub5mToday'
     key = 'cgPcAXpDDuaSdniUhHGNmo3Crgs6NJL3VmR7sOFJ/4yj3KRs/ywyhijGQFORMeyBVvscFlg4Np/GHieko5d1NQ=='
-    req = urllib.request.urlopen('{}?ServiceKey={}'.format(url, key,), timeout=1000)
+
+    try:
+        req = urllib.request.urlopen('{}?ServiceKey={}'.format(url, key), timeout=10).read().decode('utf-8')
+    except (HTTPError, URLError) as error:
+        logging.error('Data not retrieved because %s\nURL: %s', error, url)
+    except timeout:
+        logging.error('socket timed out - URL %s', url)
+    else:
+        logging.info('Access successful.')
     xmlobj = bs4.BeautifulSoup(req, 'lxml-xml')
 
     # item 다 가져옴
