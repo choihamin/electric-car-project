@@ -12,7 +12,10 @@ import requests, bs4
 import urllib
 import pandas as pd
 from fbprophet import Prophet
+import socket
 
+timeout = 1000
+socket.setdefaulttimeout(timeout)
 app=Flask(__name__)
 logging = logging.getLogger(__name__)
 app.config['JSON_AS_ASCII'] = False
