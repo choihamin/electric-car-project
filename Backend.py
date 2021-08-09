@@ -287,7 +287,7 @@ def GetStationInfo():
     data = pd.DataFrame(data, columns=['station_id', 'station_name', 'slow_charger', 'fast_charger', 'dx', 'dy', 'v2g'])
     geo_data = df_to_geojson(
         df=data,
-        properties=['station_id', 'station_name', 'slow_charger', 'fast_charger'],
+        properties=['station_id', 'station_name', 'slow_charger', 'fast_charger', 'v2g'],
         lat='dx',
         lon='dy',
         precision=5,
