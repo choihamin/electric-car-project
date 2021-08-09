@@ -14,8 +14,6 @@ import pandas as pd
 from fbprophet import Prophet
 import socket
 
-timeout = 1000
-socket.setdefaulttimeout(timeout)
 app=Flask(__name__)
 logging = logging.getLogger(__name__)
 app.config['JSON_AS_ASCII'] = False
@@ -79,7 +77,7 @@ def prophet_1hour():
 def return_supp(table):
     url = 'https://openapi.kpx.or.kr/openapi/chejusukub5mToday/getChejuSukub5mToday'
     key = 'cgPcAXpDDuaSdniUhHGNmo3Crgs6NJL3VmR7sOFJ/4yj3KRs/ywyhijGQFORMeyBVvscFlg4Np/GHieko5d1NQ=='
-    req = urllib.request.urlopen('{}?ServiceKey={}'.format(url, key,))
+    req = urllib.request.urlopen('{}?ServiceKey={}'.format(url, key,), timeout=1000)
     xmlobj = bs4.BeautifulSoup(req, 'lxml-xml')
 
     # item 다 가져옴
@@ -364,6 +362,6 @@ sched.add_job(return_supp, 'cron', args=['LpData'], minute='50', second='0', id=
 sched.add_job(prophet_1hour, 'cron', minute='10', second='0', id="test_6")
 
 if __name__ == "__main__":
-    app.run(host='192.168.66.72')
+    app.run()
 
 
