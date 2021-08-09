@@ -175,9 +175,9 @@ def GetHomeInfo():
                         'current_capacity': current_capacity,
                         'is_paid': -1,
                         'service_reservation_id': -1,
-                        'start_time': -1,
-                        'finish_time': -1,
-                        'station_name': -1
+                        'start_time': "몰라",
+                        'finish_time': "몰라",
+                        'station_name': "몰라"
                         })
 
 
