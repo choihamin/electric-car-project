@@ -24,9 +24,7 @@ api = Api(app)
 
 up.uses_netloc.append("postgres")
 os.environ["DATABASE_URL"] = "postgres://yadctsip:mvZ_FWEhIcFp4PCZMlzUtdZivUkj1IBG@arjuna.db.elephantsql.com/yadctsip"
-os.environ["LOAD_DATA_URL"] = 'https://openapi.kpx.or.kr/openapi/chejusukub5mToday/getChejuSukub5mToday?ServiceKey=cgPcAXpDDuaSdniUhHGNmo3Crgs6NJL3VmR7sOFJ/4yj3KRs/ywyhijGQFORMeyBVvscFlg4Np/GHieko5d1NQ=='
 url = up.urlparse(os.environ["DATABASE_URL"])
-url_load = up.urlparse(os.environ["LOAD_DATA_URL"])
 connect = psycopg2.connect(database=url.path[1:],
                         user=url.username,
                         password=url.password,
@@ -87,8 +85,10 @@ def prophet_1hour():
         return 0
 
 def return_supp(table):
+    url = 'https://openapi.kpx.or.kr/openapi/chejusukub5mToday/getChejuSukub5mToday?'
+    key = 'cgPcAXpDDuaSdniUhHGNmo3Crgs6NJL3VmR7sOFJ/4yj3KRs/ywyhijGQFORMeyBVvscFlg4Np/GHieko5d1NQ=='
     try:
-        req = urllib.request.urlopen(os.environ["LOAD_DATA_URL"], timeout=10).read().decode('utf-8')
+        req = urllib.request.urlopen("{}?ServiceKey={}".format(url, key), timeout=10)
     except (HTTPError, URLError) as error:
         logging.error('Data not retrieved because %s\nURL: %s', error, url)
     except timeout:
@@ -238,7 +238,7 @@ def StopCharge():
 def GetChargeHistory():
     id = request.args.get('Id')
     try:
-        cur.execute("select reserve_time, reserve_type, expected_fee from ServiceReservation from customer_id='{}'".format(id))
+        cur.execute("select reserve_time, reserve_type, expected_fee from ServiceReservation where customer_id='{}'".format(id))
         data = cur.fetchall()
         dict_ = jsonify(list_history=[dict(reserve_time=data[i][0], reserve_type=data[i][1], expected_fee=data[i][2]) for i in range(len(data))])
         return dict_
