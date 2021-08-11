@@ -205,7 +205,7 @@ def GetHomeInfo():
 def GetChargeInfo():
     id = request.args.get('Id')
     try:
-        cur.execute("select reserve_type, finish_time, expected_fee, dx, dy from ServiceReservation natural join Station where reserve_id='{}'".format(id))
+        cur.execute("select reserve_type, finish_time, expected_fee, dx, dy from ServiceReservation natural join Station where customer_id='{}'".format(id))
         data = cur.fetchall()[-1]
         reserve_type = data[0]
         finish_time = data[1]
