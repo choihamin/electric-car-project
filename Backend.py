@@ -226,8 +226,11 @@ def GetChargeInfo():
 @app.route('/StopCharge', methods=['GET', 'POST'])
 def StopCharge():
     id = request.args.get('Service_reservation_id')
+    now = datetime.datetime.now()
+    now = now.strftime('%Y-%m-%D-%H-%M-%S')
+
     try:
-        cur.execute("update ServiceReservation set finish_time=now() where reserve_id = '{}'".format(id))
+        cur.execute("update ServiceReservation set finish_time='{}' where reserve_id ='{}'".format(now, id))
         connect.commit()
         return jsonify({'result_code': 1})
 
