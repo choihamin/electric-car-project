@@ -203,9 +203,9 @@ def GetHomeInfo():
 
 @app.route('/GetChargeInfo', methods=['GET', 'POST'])
 def GetChargeInfo():
-    id = request.args.get('Id')
+    id = request.args.get('Service_reservation_Id')
     try:
-        cur.execute("select reserve_type, finish_time, expected_fee, dx, dy from ServiceReservation natural join Station where customer_id='{}'".format(id))
+        cur.execute("select reserve_type, finish_time, expected_fee, dx, dy from ServiceReservation natural join Station where reserve_id='{}'".format(id))
         data = cur.fetchall()[-1]
         reserve_type = data[0]
         finish_time = data[1]
@@ -373,8 +373,8 @@ def SetReserveInfo():
 
 
 
-sched = BackgroundScheduler()
-sched.start()
+"""sched = BackgroundScheduler()
+sched.start()"""
 """sched.add_job(return_supp, 'cron', args=['HourData'], minute='12', second='30', id="test_1")
 sched.add_job(return_supp, 'cron', args=['LpData'], minute='5', second='0', id="test_2")
 sched.add_job(return_supp, 'cron', args=['LpData'], minute='20', second='0', id="test_3")
