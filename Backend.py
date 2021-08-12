@@ -263,7 +263,7 @@ def GetChargeResult():
 def SetServicePaid():
     id = request.args.get('Service_reservation_id')
     try:
-        cur.execute("update ServiceReservation set is_paid = 1 where id='{}'".format(id))
+        cur.execute("update ServiceReservation set is_paid = 1 where reserve_id='{}'".format(id))
         connect.commit()
         return jsonify({'result_code': 1})
     except:
@@ -373,15 +373,15 @@ def SetReserveInfo():
 
 
 
-"""sched = BackgroundScheduler()
-sched.start()"""
-"""sched.add_job(return_supp, 'cron', args=['HourData'], minute='12', second='30', id="test_1")
+sched = BackgroundScheduler()
+sched.start()
+sched.add_job(return_supp, 'cron', args=['HourData'], minute='12', second='30', id="test_1")
 sched.add_job(return_supp, 'cron', args=['LpData'], minute='5', second='0', id="test_2")
 sched.add_job(return_supp, 'cron', args=['LpData'], minute='20', second='0', id="test_3")
 sched.add_job(return_supp, 'cron', args=['LpData'], minute='35', second='0', id="test_4")
 sched.add_job(return_supp, 'cron', args=['LpData'], minute='50', second='0', id="test_5")
 sched.add_job(prophet_1hour, 'cron', minute='50', second='0', id="test_6")
-"""
+
 if __name__ == "__main__":
     app.run(host='0.0.0.0')
 
