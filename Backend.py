@@ -14,6 +14,8 @@ import pandas as pd
 from fbprophet import Prophet
 from socket import timeout
 from urllib.error import HTTPError, URLError
+from urllib.request import Request, urlopen
+from urllib.parse import urlencode, quote_plus, unquote
 
 
 
@@ -85,10 +87,12 @@ def prophet_1hour():
         return 0
 
 def return_supp(table):
-    url = 'https://openapi.kpx.or.kr/openapi/chejusukub5mToday/getChejuSukub5mToday?'
-    key = 'cgPcAXpDDuaSdniUhHGNmo3Crgs6NJL3VmR7sOFJ/4yj3KRs/ywyhijGQFORMeyBVvscFlg4Np/GHieko5d1NQ=='
+
+    url = 'https://openapi.kpx.or.kr/openapi/chejusukub5mToday/getChejuSukub5mToday'
+    queryParams = '?' + urlencode({quote_plus('ServiceKey'): 'cgPcAXpDDuaSdniUhHGNmo3Crgs6NJL3VmR7sOFJ/4yj3KRs/ywyhijGQFORMeyBVvscFlg4Np/GHieko5d1NQ=='})
+
     try:
-        req = urllib.request.urlopen("{}?ServiceKey={}".format(url, key), timeout=10)
+        response = requests.get(url + queryParams).text.encode('utf-8')
     except (HTTPError, URLError) as error:
         logging.error('Data not retrieved because %s\nURL: %s', error, url)
     except timeout:
@@ -96,7 +100,7 @@ def return_supp(table):
     else:
         logging.info('Access successful.')
 
-    xmlobj = bs4.BeautifulSoup(req, 'lxml-xml')
+    xmlobj = bs4.BeautifulSoup(response, 'lxml-xml')
 
     # item 다 가져옴
     items = xmlobj.findAll('item')
