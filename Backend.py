@@ -77,14 +77,10 @@ def prophet_1hour():
                 connect.commit()
                 cur.execute("select * from Prophet")
                 data = cur.fetchall()
-        print('ㅋ')
-        connect.close()
-        connect = conn()
-        cur = connect.cursor()
         sql = "insert into Prophet values('{}',{},{},{})"
         cur.execute(sql.format(time, seven_day_after_yhat, seven_day_after_yhat_upper, seven_day_after_yhat_lower))
-        print('ㅋ2')
         connect.commit()
+        print(time, seven_day_after_yhat, seven_day_after_yhat_upper, seven_day_after_yhat_lower)
         print("prophet_1hour : success")
         return 1
     except:
@@ -125,7 +121,6 @@ def return_supp(table):
 
     cur.execute("select * from {}".format(table))
     data = cur.fetchall()
-    print(data)
 
     if table == 'HourData':
         length = 96
@@ -141,7 +136,6 @@ def return_supp(table):
                 connect.commit()
                 cur.execute("select * from {}".format(table))
                 data = cur.fetchall()
-        print(data)
         print("=====================================================================================")
         sql = "insert into {} values('{}',{})"
         cur.execute(sql.format(table, datetime, suppReservePwr))
@@ -453,11 +447,11 @@ def SetReserveInfo():
 sched = BackgroundScheduler()
 sched.start()
 sched.add_job(return_supp, 'cron', args=['HourData'], minute='0', second='0', id="test_1")
-sched.add_job(return_supp, 'cron', args=['LpData'], minute='2', second='0', id="test_2")
+sched.add_job(return_supp, 'cron', args=['LpData'], minute='3', second='0', id="test_2")
 sched.add_job(return_supp, 'cron', args=['LpData'], minute='19', second='0', id="test_3")
 sched.add_job(return_supp, 'cron', args=['LpData'], minute='34', second='0', id="test_4")
 sched.add_job(return_supp, 'cron', args=['LpData'], minute='49', second='0', id="test_5")
-sched.add_job(prophet_1hour, 'cron', minute='4', second='20', id="test_6")
+sched.add_job(prophet_1hour, 'cron', minute='4', second='30', id="test_6")
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0')
