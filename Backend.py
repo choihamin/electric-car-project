@@ -19,7 +19,7 @@ from urllib.parse import urlencode, quote_plus, unquote
 
 
 
-app=Flask(__name__)
+app = Flask(__name__)
 logging = logging.getLogger(__name__)
 app.config['JSON_AS_ASCII'] = False
 api = Api(app)
@@ -27,15 +27,20 @@ api = Api(app)
 up.uses_netloc.append("postgres")
 os.environ["DATABASE_URL"] = "postgres://yadctsip:mvZ_FWEhIcFp4PCZMlzUtdZivUkj1IBG@arjuna.db.elephantsql.com/yadctsip"
 url = up.urlparse(os.environ["DATABASE_URL"])
-connect = psycopg2.connect(database=url.path[1:],
-                        user=url.username,
-                        password=url.password,
-                        host=url.hostname,
-                        port=url.port)
-cur = connect.cursor()
+
+connect = None
+def conn():
+    connect = psycopg2.connect(database=url.path[1:],
+                            user=url.username,
+                            password=url.password,
+                            host=url.hostname,
+                            port=url.port)
+    return connect
 
 
 def prophet_1hour():
+    connect = conn()
+    cur = connect.cursor()
     cur.execute("select * from HourData")
     trade_train = cur.fetchall()
     trade_train = pd.DataFrame(data=trade_train, columns=['lp_time datetime', 'supp_reserve_pwr'])
@@ -63,9 +68,6 @@ def prophet_1hour():
 
     cur.execute("select * from Prophet")
     data = cur.fetchall()
-    print("ready? 1hour")
-    print(data[0])
-    print(time, seven_day_after_yhat, seven_day_after_yhat_upper, seven_day_after_yhat_lower)
 
     try:
         if len(data) > 500:
@@ -76,6 +78,9 @@ def prophet_1hour():
                 cur.execute("select * from Prophet")
                 data = cur.fetchall()
         print('ㅋ')
+        connect.close()
+        connect = conn()
+        cur = connect.cursor()
         sql = "insert into Prophet values('{}',{},{},{})"
         cur.execute(sql.format(time, seven_day_after_yhat, seven_day_after_yhat_upper, seven_day_after_yhat_lower))
         print('ㅋ2')
@@ -85,9 +90,13 @@ def prophet_1hour():
     except:
         print("prophet_1hour : Fail")
         return 0
+    finally:
+        if connect is not None:
+            connect.close()
 
 def return_supp(table):
-
+    connect = conn()
+    cur = connect.cursor()
     url = 'https://openapi.kpx.or.kr/openapi/chejusukub5mToday/getChejuSukub5mToday'
     queryParams = '?' + urlencode({quote_plus('ServiceKey'): 'cgPcAXpDDuaSdniUhHGNmo3Crgs6NJL3VmR7sOFJ/4yj3KRs/ywyhijGQFORMeyBVvscFlg4Np/GHieko5d1NQ=='})
 
@@ -142,6 +151,10 @@ def return_supp(table):
     except:
         print('return_supp : Fail')
         return 0
+    finally:
+        if connect is not None:
+            connect.close()
+
 
 
 
@@ -149,19 +162,24 @@ def return_supp(table):
 
 @app.route('/CheckLogin', methods=['GET', 'POST'])
 def CheckLogin():
+    connect = conn()
+    cur = connect.cursor()
     id = request.args.get('Id')
     pw = request.args.get('Password')
-    print(id, pw)
     cur.execute("select * from customer where customer_id='{}' and password='{}'".format(id, pw))
     data = cur.fetchall()
-
+    connect.close()
     if len(data) == 1:
         return jsonify({'result_code': 1})
     else:
         return jsonify({'result_code': 0})
 
+
 @app.route('/GetHomeInfo', methods=['GET', 'POST'])
 def GetHomeInfo():
+    connect = conn()
+    cur = connect.cursor()
+
     id = request.args.get('Id')
     cur.execute("select customer_name, car_model_name, battery_capacity, efficiency from Customer natural join CarModel where customer_id='{}'".format(id))
     data = cur.fetchall()
@@ -172,13 +190,14 @@ def GetHomeInfo():
     current_capacity = -1
 
     try:
-        cur.execute("select reserve_id, reserve_time, finish_time, station_name, is_paid from ServiceReservation natural join Station where customer_id='{}'".format(id))
+        cur.execute("select reserve_id, reserve_time, finish_time, station_name, is_paid, reserve_type from ServiceReservation natural join Station where customer_id='{}'".format(id))
         target = cur.fetchall()[-1]
         service_reservation_id = target[0]
         start_time = target[1]
         end_time = target[2]
         station_name = target[3]
         is_paid = target[4]
+        reserve_type = target[5]
 
         return jsonify({'name': name,
                         'car_model_name': car_model,
@@ -189,6 +208,7 @@ def GetHomeInfo():
                         'service_reservation_id': service_reservation_id,
                         'start_time': start_time,
                         'finish_time': end_time,
+                        'reserve_type': reserve_type,
                         'station_name':station_name})
     except:
         return jsonify({'name': name,
@@ -200,13 +220,19 @@ def GetHomeInfo():
                         'service_reservation_id': -1,
                         'start_time': "몰라",
                         'finish_time': "몰라",
-                        'station_name': "몰라"
+                        'reserve_type': -1,
+                        'station_name': "몰라",
                         })
+    finally:
+        if connect is not None:
+            connect.close()
 
 
 
 @app.route('/GetChargeInfo', methods=['GET', 'POST'])
 def GetChargeInfo():
+    connect = conn()
+    cur = connect.cursor()
     id = request.args.get('Service_reservation_Id')
     try:
         cur.execute("select reserve_type, finish_time, expected_fee, dx, dy from ServiceReservation natural join Station where reserve_id='{}'".format(id))
@@ -226,9 +252,14 @@ def GetChargeInfo():
         })
     except:
         return jsonify({'result_code': 0})
+    finally:
+        if connect is not None:
+            connect.close()
 
 @app.route('/StopCharge', methods=['GET', 'POST'])
 def StopCharge():
+    connect = conn()
+    cur = connect.cursor()
     id = request.args.get('Service_reservation_id')
     now = datetime.datetime.now()
     now = now.strftime('%Y-%m-%d-%H-%M-%S')
@@ -240,9 +271,14 @@ def StopCharge():
         return jsonify({'result_code': 1})
     except:
         return jsonify({'result_code': 0})
+    finally:
+        if connect is not None:
+            connect.close()
 
 @app.route('/GetChargeHistory', methods=['GET', 'POST'])
 def GetChargeHistory():
+    connect = conn()
+    cur = connect.cursor()
     id = request.args.get('Id')
     try:
         cur.execute("select reserve_time, reserve_type, expected_fee from ServiceReservation where customer_id='{}'".format(id))
@@ -251,9 +287,14 @@ def GetChargeHistory():
         return dict_
     except:
         return jsonify({'result_code': 0})
+    finally:
+        if connect is not None:
+            connect.close()
 
 @app.route('/GetChargeResult', methods=['GET','POST'])
 def GetChargeResult():
+    connect = conn()
+    cur = connect.cursor()
     id = request.args.get('Service_reservation_id')
     try:
         cur.execute("select expected_fee from ServiceReservation where reserve_id='{}'".format(id))
@@ -261,10 +302,16 @@ def GetChargeResult():
         return jsonify({'expected_fee': target[0]})
     except:
         return jsonify({'result_code': 0})
+    finally:
+        if connect is not None:
+            connect.close()
 
 
 @app.route('/SetServicePaid', methods=['GET','POST'])
 def SetServicePaid():
+    connect = conn()
+    cur = connect.cursor()
+
     id = request.args.get('Service_reservation_id')
     try:
         cur.execute("update ServiceReservation set is_paid = 1 where reserve_id='{}'".format(id))
@@ -272,10 +319,16 @@ def SetServicePaid():
         return jsonify({'result_code': 1})
     except:
         return jsonify({'result_code': 0})
+    finally:
+        if connect is not None:
+            connect.close()
 
 
 @app.route('/SetSignUpInfo', methods=['GET', 'POST'])
 def SetSignUpInfo():
+    connect = conn()
+    cur = connect.cursor()
+
     id = request.args.get('Id')
     pw = request.args.get('Password')
     name = request.args.get('Name')
@@ -286,9 +339,14 @@ def SetSignUpInfo():
         return jsonify({'result_code': 1})
     except:
         return jsonify({'result_code': 0})
+    finally:
+        if connect is not None:
+            connect.close()
 
 @app.route('/GetCarCompanyInfo', methods=['GET','POST'])
 def GetCarCompanyInfo():
+    connect = conn()
+    cur = connect.cursor()
     try:
         cur.execute("select distinct manufacturer from CarModel")
         data = cur.fetchall()
@@ -296,18 +354,26 @@ def GetCarCompanyInfo():
         return dict_
     except:
         return jsonify({'result_code': 0})
+    finally:
+        if connect is not None:
+            connect.close()
 
 
 @app.route('/GetCarModelInfo', methods=['GET', 'POST'])
 def GetCarModelInfo():
+    connect = conn()
+    cur = connect.cursor()
     company = request.args.get('Car_company')
     cur.execute("select car_model_id, car_model_name from CarModel where manufacturer='{}'".format(company))
     data = cur.fetchall()
     dict_ = jsonify(models=[dict(model_id=data[i][0], model_name=data[i][1]) for i in range(len(data))])
+    connect.close()
     return dict_
 
 @app.route('/GetStationInfo', methods=['GET', 'POST'])
 def GetStationInfo():
+    connect = conn()
+    cur = connect.cursor()
     cur.execute("select station_id, station_name, slow_charger, fast_charger, dx, dy, v2g from Station")
     data = cur.fetchall()
     data = pd.DataFrame(data, columns=['station_id', 'station_name', 'slow_charger', 'fast_charger', 'dx', 'dy', 'v2g'])
@@ -322,11 +388,15 @@ def GetStationInfo():
     path = 'station.geojson'
     with open(path) as f:
         data = json.loads(f.read())
-        print(1)
+    connect.close()
+
     return data
 
 @app.route('/SetReserveInfo', methods=['GET', 'POST'])
 def SetReserveInfo():
+    connect = conn()
+    cur = connect.cursor()
+
     # param get
     id = request.args.get('Id')
     station_id = request.args.get('StationId')
@@ -374,17 +444,20 @@ def SetReserveInfo():
                         'expected_fee': expected_fee})
     except:
         return jsonify({'result_code': 0})
+    finally:
+        if connect is not None:
+            connect.close()
 
 
 
 sched = BackgroundScheduler()
 sched.start()
-sched.add_job(return_supp, 'cron', args=['HourData'], minute='12', second='30', id="test_1")
-sched.add_job(return_supp, 'cron', args=['LpData'], minute='5', second='0', id="test_2")
-sched.add_job(return_supp, 'cron', args=['LpData'], minute='20', second='0', id="test_3")
-sched.add_job(return_supp, 'cron', args=['LpData'], minute='35', second='0', id="test_4")
-sched.add_job(return_supp, 'cron', args=['LpData'], minute='50', second='0', id="test_5")
-sched.add_job(prophet_1hour, 'cron', minute='50', second='0', id="test_6")
+sched.add_job(return_supp, 'cron', args=['HourData'], minute='0', second='0', id="test_1")
+sched.add_job(return_supp, 'cron', args=['LpData'], minute='2', second='0', id="test_2")
+sched.add_job(return_supp, 'cron', args=['LpData'], minute='19', second='0', id="test_3")
+sched.add_job(return_supp, 'cron', args=['LpData'], minute='34', second='0', id="test_4")
+sched.add_job(return_supp, 'cron', args=['LpData'], minute='49', second='0', id="test_5")
+sched.add_job(prophet_1hour, 'cron', minute='4', second='20', id="test_6")
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0')
