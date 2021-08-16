@@ -55,7 +55,7 @@ def prophet_1hour():
     m.fit(prophet_data)
 
     # 144 period = 144시간 = 7일 뒤 데이터까지 분석
-    future = m.make_future_dataframe(periods=144, freq='H')
+    future = m.make_future_dataframe(periods=24, freq='H')
     future['cap'] = 1000000
     future['floor'] = 0
     forecast = m.predict(future)
@@ -351,6 +351,12 @@ def GetCarCompanyInfo():
     finally:
         if connect is not None:
             connect.close()
+
+@app.route('/GetFeeInfo', methods=['GET','POST'])
+def GetFeeInfo():
+    connect = conn()
+    cur = connect.cursor()
+
 
 
 @app.route('/GetCarModelInfo', methods=['GET', 'POST'])
