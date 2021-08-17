@@ -37,6 +37,34 @@ def conn():
                             port=url.port)
     return connect
 
+def fee_set():
+    connect = conn()
+    cur = connect.cursor()
+
+    cur.execute("select * from HourData")
+    HD_target = cur.fetchall()[-1]
+    date = HD_target[0]
+    supp_reserve_pwer = HD_target[1]
+
+    cur.execute("select * from Prophet where lp_time_datetime='{}'".format(date))
+    PP_target = cur.fetchall()[-1]
+    yhat = PP_target[1]
+    yhat_upper = PP_target[2]
+    yhat_lower = PP_target[3]
+
+    now = datetime.datetime.now()
+    seasonTime = str(int(now.strftime('%m%H')))
+    cur.execute("select fee from SeasonTime natural join LoadFee where season_time_id=''".format(seasonTime))
+    fee = cur.fetchall()[0]
+
+    if supp_reserve_pwer > yhat_upper:
+        expected_fee = fee * 0.8
+    elif supp_reserve_pwer < yhat_lower:
+        expected_fee = fee * 1.2
+    else:
+        expected_fee = fee * (((100 + yhat - supp_reserve_pwer) * 20 / (yhat_upper - yhat)) / 100)
+
+
 
 def prophet_1hour():
     connect = conn()
@@ -352,12 +380,6 @@ def GetCarCompanyInfo():
         if connect is not None:
             connect.close()
 
-@app.route('/GetFeeInfo', methods=['GET','POST'])
-def GetFeeInfo():
-    connect = conn()
-    cur = connect.cursor()
-
-
 
 @app.route('/GetCarModelInfo', methods=['GET', 'POST'])
 def GetCarModelInfo():
@@ -452,12 +474,12 @@ def SetReserveInfo():
 
 sched = BackgroundScheduler()
 sched.start()
-sched.add_job(return_supp, 'cron', args=['HourData'], minute='0', second='0', id="test_1")
-sched.add_job(return_supp, 'cron', args=['LpData'], minute='3', second='0', id="test_2")
-sched.add_job(return_supp, 'cron', args=['LpData'], minute='19', second='0', id="test_3")
-sched.add_job(return_supp, 'cron', args=['LpData'], minute='34', second='0', id="test_4")
-sched.add_job(return_supp, 'cron', args=['LpData'], minute='49', second='0', id="test_5")
-sched.add_job(prophet_1hour, 'cron', minute='4', second='30', id="test_6")
+sched.add_job(return_supp, 'cron', args=['HourData'], hour='*', minute='0', second='0', id="test_1")
+sched.add_job(return_supp, 'cron', args=['LpData'], hour='*', minute='3', second='0', id="test_2")
+sched.add_job(return_supp, 'cron', args=['LpData'], hour='*', minute='19', second='0', id="test_3")
+sched.add_job(return_supp, 'cron', args=['LpData'], hour='*', minute='34', second='0', id="test_4")
+sched.add_job(return_supp, 'cron', args=['LpData'], hour='*', minute='49', second='0', id="test_5")
+sched.add_job(prophet_1hour, 'cron', hour='*', minute='4', second='30', id="test_6")
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0')
