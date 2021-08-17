@@ -470,16 +470,12 @@ def SetReserveInfo():
         if connect is not None:
             connect.close()
 
-
-
 sched = BackgroundScheduler()
 sched.start()
-sched.add_job(return_supp, 'cron', args=['HourData'], hour='*', minute='0', second='0', id="test_1")
-sched.add_job(return_supp, 'cron', args=['LpData'], hour='*', minute='3', second='0', id="test_2")
-sched.add_job(return_supp, 'cron', args=['LpData'], hour='*', minute='19', second='0', id="test_3")
-sched.add_job(return_supp, 'cron', args=['LpData'], hour='*', minute='34', second='0', id="test_4")
-sched.add_job(return_supp, 'cron', args=['LpData'], hour='*', minute='49', second='0', id="test_5")
-sched.add_job(prophet_1hour, 'cron', hour='*', minute='4', second='30', id="test_6")
+
+sched.add_job(return_supp, trigger='cron', args=['LpData'], hour='*', minute='*/15', second='59', id="test_1")
+sched.add_job(return_supp, trigger='cron', args=['HourData'], hour='*', minute='6', second='0', id="test_2")
+sched.add_job(prophet_1hour, trigger='cron', hour='*', minute='7', second='30', id="test_3")
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0')
