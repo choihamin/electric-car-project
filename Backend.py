@@ -82,6 +82,17 @@ def fee_set():
             temp[5] = '00'
             time = '-'.join(temp)
 
+        cur.execute("select * from FeeInfo")
+        data = cur.fetchall()
+
+        if len(data) > 96:
+            while len(data) > 96:
+                first_idx = data[0][0]
+                cur.execute("delete from FeeInfo where lp_time_datetime='{}'".format(first_idx))
+                connect.commit()
+                cur.execute("select * from FeeInfo")
+                data = cur.fetchall()
+
         sql = "insert into FeeInfo values('{}',{})"
         cur.execute(sql.format(time, expected_fee))
         connect.commit()
@@ -394,11 +405,23 @@ def GetFeeInfo():
     connect = conn()
     cur = connect.cursor()
 
-    cur.execute("select * from FeeInfo")
-    data = cur.fetchall()
-    now = datetime.datetime.now()
-    now.strftime('%Y-%m-')
+    try:
+        cur.execute("select * from FeeInfo")
+        data = cur.fetchall()
+        now = datetime.datetime.now()
+        string = now.strftime('%Y-%m-%d')
 
+        lst = []
+        for e in data:
+            if string in e[0]:
+                lst.append(e)
+        dict_ = jsonify(fee_history=[dict(hhmm=':'.join(e[0].split('-')[3:5]), fee=e[1]) for e in lst])
+        return dict_
+    except:
+        return jsonify({'result_code': -1})
+    finally:
+        if connect is not None:
+            connect.close()
 
 
 @app.route('/SetSignUpInfo', methods=['GET', 'POST'])
