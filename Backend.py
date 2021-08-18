@@ -211,6 +211,7 @@ def return_supp(table):
     elif table == 'LpData':
         length = 720
         print('ready? Lp_Data_15min?')
+
     try:
         if len(data) > length:
             while len(data) > length:
