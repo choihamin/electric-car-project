@@ -74,7 +74,7 @@ def fee_set():
             temp[5] = '00'
             time = '-'.join(temp)
         elif 30 <= int(now.strftime('%M')) < 45:
-            temp[4] = '35'
+            temp[4] = '30'
             temp[5] = '00'
             time = '-'.join(temp)
         elif 45 <= int(now.strftime('%M')) :
@@ -170,8 +170,24 @@ def return_supp(table):
     last_item = items[-1]
 
     # datetime = 데이터 시간
-    datetime = last_item.baseDatetime.text
-    datetime = datetime[0:4] + "-" + datetime[4:6] + "-" + datetime[6:8] + "-" + datetime[8:10] + "-" + datetime[10:12] + "-" + datetime[12:]
+    now = datetime.datetime.now()
+    temp = now.strftime("%Y-%m-%d-%H-%M-%S").split('-')
+    if 0 <= int(now.strftime('%M')) < 15:
+        temp[4] = '00'
+        temp[5] = '00'
+        time = '-'.join(temp)
+    elif 15 <= int(now.strftime('%M')) < 30:
+        temp[4] = '15'
+        temp[5] = '00'
+        time = '-'.join(temp)
+    elif 30 <= int(now.strftime('%M')) < 45:
+        temp[4] = '30'
+        temp[5] = '00'
+        time = '-'.join(temp)
+    elif 45 <= int(now.strftime('%M')):
+        temp[4] = '45'
+        temp[5] = '00'
+        time = '-'.join(temp)
     # suppReservePwr = 공급예비력 = 공급능력 - 현재수요
     suppReservePwr = float(last_item.suppAbility.text) - float(last_item.currPwrTot.text)
 
@@ -194,7 +210,7 @@ def return_supp(table):
                 data = cur.fetchall()
         print("=====================================================================================")
         sql = "insert into {} values('{}',{})"
-        cur.execute(sql.format(table, datetime, suppReservePwr))
+        cur.execute(sql.format(table, time, suppReservePwr))
         connect.commit()
         print('return_supp : success')
         return 1
@@ -373,6 +389,17 @@ def SetServicePaid():
         if connect is not None:
             connect.close()
 
+@app.route('/GetFeeInfo', methods=['GET', 'POST'])
+def GetFeeInfo():
+    connect = conn()
+    cur = connect.cursor()
+
+    cur.execute("select * from FeeInfo")
+    data = cur.fetchall()
+    now = datetime.datetime.now()
+    now.strftime('%Y-%m-')
+
+
 
 @app.route('/SetSignUpInfo', methods=['GET', 'POST'])
 def SetSignUpInfo():
@@ -498,16 +525,19 @@ def SetReserveInfo():
         if connect is not None:
             connect.close()
 
-sched = BackgroundScheduler()
-sched.start()
 
+
+
+sched = BackgroundScheduler()
 sched.add_job(return_supp, trigger='cron', args=['LpData'], hour='*', minute='*/15', second='59', id="test_1")
-sched.add_job(return_supp, trigger='cron', args=['HourData'], hour='*', minute='6', second='0', id="test_2")
+sched.add_job(return_supp, trigger='cron', args=['HourData'], hour='*', minute='8', second='0', id="test_2")
 sched.add_job(prophet_1hour, trigger='cron', hour='*', minute='7', second='30', id="test_3")
 sched.add_job(fee_set, trigger='cron', hour='*', minute='4', second='0', id='test4')
 sched.add_job(fee_set, trigger='cron', hour='*', minute='19', second='0', id='test5')
 sched.add_job(fee_set, trigger='cron', hour='*', minute='34', second='0', id='test6')
 sched.add_job(fee_set, trigger='cron', hour='*', minute='49', second='0', id='test7')
+
+sched.start()
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0')
