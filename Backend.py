@@ -37,6 +37,7 @@ def conn():
                             port=url.port)
     return connect
 
+
 def fee_set():
     connect = conn()
     cur = connect.cursor()
@@ -54,17 +55,21 @@ def fee_set():
 
         now = datetime.datetime.now()
         seasonTime = str(int(now.strftime('%m%H')))
-        cur.execute("select fee from SeasonTime natural join LoadFee where season_time_id=''".format(seasonTime))
+        cur.execute("select fee from SeasonTime natural join LoadFee where season_time_id='{}'".format(seasonTime))
         fee = cur.fetchall()[0]
 
         if supp_reserve_pwer > yhat_upper:
-            expected_fee = fee * 0.8
+            expected_fee = fee[0] * 0.8
         elif supp_reserve_pwer < yhat_lower:
-            expected_fee = fee * 1.2
+            expected_fee = fee[0] * 1.2
         else:
-            expected_fee = fee * (((100 + yhat - supp_reserve_pwer) * 20 / (yhat_upper - yhat)) / 100)
+            expected_fee = fee[0] * (100 + ((yhat - supp_reserve_pwer) * 20 / (yhat_upper - yhat))) / 100
 
         temp = now.strftime("%Y-%m-%d-%H-%M-%S").split('-')
+
+        if temp[0:3] != date.split('-')[0:3]:
+            raise Exception('날짜가 서로 매칭되지 않습니다.')
+
         if 0 <= int(now.strftime('%M')) < 15:
             temp[4] = '00'
             temp[5] = '00'
@@ -77,7 +82,7 @@ def fee_set():
             temp[4] = '30'
             temp[5] = '00'
             time = '-'.join(temp)
-        elif 45 <= int(now.strftime('%M')) :
+        elif 45 <= int(now.strftime('%M')):
             temp[4] = '45'
             temp[5] = '00'
             time = '-'.join(temp)
@@ -97,12 +102,12 @@ def fee_set():
         cur.execute(sql.format(time, expected_fee))
         connect.commit()
         print("Process fee_set is successful")
-    except:
+    except Exception as e:
         print('insert was failed')
+        print('Error reason :', e)
     finally:
         if connect is not None:
             connect.close()
-
 
 
 def prophet_1hour():
@@ -553,14 +558,14 @@ def SetReserveInfo():
 
 
 sched = BackgroundScheduler()
-sched.add_job(return_supp, trigger='cron', args=['LpData'], hour='*', minute='*/30', second='59', id="test_1")
-sched.add_job(return_supp, trigger='cron', args=['HourData'], hour='*', minute='33', second='0', id="test_2")
-sched.add_job(prophet_1hour, trigger='cron', hour='*', minute='35', second='30', id="test_3")
-sched.add_job(fee_set, trigger='cron', hour='*', minute='38', second='0', id='test4')
-"""sched.add_job(fee_set, trigger='cron', hour='*', minute='19', second='0', id='test5')
+sched.add_job(return_supp, trigger='cron', args=['LpData'], hour='*', minute='*/15', second='59', id="test_1")
+sched.add_job(return_supp, trigger='cron', args=['HourData'], hour='*', minute='5', second='0', id="test_2", misfire_grace_time=300)
+sched.add_job(prophet_1hour, trigger='cron', hour='*', minute='12', second='30', id="test_3", misfire_grace_time=240)
+sched.add_job(fee_set, trigger='cron', hour='*', minute='4', second='0', id='test4')
+sched.add_job(fee_set, trigger='cron', hour='*', minute='19', second='0', id='test5')
 sched.add_job(fee_set, trigger='cron', hour='*', minute='34', second='0', id='test6')
 sched.add_job(fee_set, trigger='cron', hour='*', minute='49', second='0', id='test7')
-"""
+
 sched.start()
 
 if __name__ == "__main__":
