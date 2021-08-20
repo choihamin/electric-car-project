@@ -199,10 +199,27 @@ def return_supp(table):
     last_item = items[-1]
 
     # datetime = 데이터 시간
+
     now = datetime.datetime.now()
+
     temp = now.strftime("%Y-%m-%d-%H-%M-%S").split('-')
-    temp[4] = '00'
-    temp[5] = '00'
+
+    if table == 'LpData':
+        if 0 <= int(now.strftime('%M')) < 15:
+            temp[4] = '00'
+            temp[5] = '00'
+        elif 15 <= int(now.strftime('%M')) < 30:
+            temp[4] = '15'
+            temp[5] = '00'
+        elif 30 <= int(now.strftime('%M')) < 45:
+            temp[4] = '30'
+            temp[5] = '00'
+        elif 45 <= int(now.strftime('%M')):
+            temp[4] = '45'
+            temp[5] = '00'
+    elif table == 'HourData':
+        temp[4] = '00'
+        temp[5] = '00'
     time = '-'.join(temp)
     # suppReservePwr = 공급예비력 = 공급능력 - 현재수요
     suppReservePwr = float(last_item.suppAbility.text) - float(last_item.currPwrTot.text)
