@@ -42,18 +42,23 @@ def fee_set():
     connect = conn()
     cur = connect.cursor()
     try:
-        cur.execute("select * from HourData")
-        HD_target = cur.fetchall()[-1]
-        date = HD_target[0]
-        supp_reserve_pwer = HD_target[1]
+        try:
+            now = datetime.datetime.now()
+            date = now.strftime("%Y-%m-%d-%H-00-00")
+            cur.execute("select * from HourData where lp_time_datetime='{}'".format(date))
+            HD_target = cur.fetchall()[-1]
+            supp_reserve_pwer = HD_target[1]
+        except:
+            raise Exception('{}에 해당하는 HourData가 존재하지 않습니다'.format(date))
+        try:
+            cur.execute("select * from Prophet where lp_time_datetime='{}'".format(date))
+            PP_target = cur.fetchall()[-1]
+            yhat = PP_target[1]
+            yhat_upper = PP_target[2]
+            yhat_lower = PP_target[3]
+        except:
+            raise Exception('{}에 해당하는 Prophet Data가 존재하지 않습니다'.format(date))
 
-        cur.execute("select * from Prophet where lp_time_datetime='{}'".format(date))
-        PP_target = cur.fetchall()[-1]
-        yhat = PP_target[1]
-        yhat_upper = PP_target[2]
-        yhat_lower = PP_target[3]
-
-        now = datetime.datetime.now()
         seasonTime = str(int(now.strftime('%m%H')))
         cur.execute("select fee from SeasonTime natural join LoadFee where season_time_id='{}'".format(seasonTime))
         fee = cur.fetchall()[0]
@@ -188,22 +193,9 @@ def return_supp(table):
     # datetime = 데이터 시간
     now = datetime.datetime.now()
     temp = now.strftime("%Y-%m-%d-%H-%M-%S").split('-')
-    if 0 <= int(now.strftime('%M')) < 15:
-        temp[4] = '00'
-        temp[5] = '00'
-        time = '-'.join(temp)
-    elif 15 <= int(now.strftime('%M')) < 30:
-        temp[4] = '15'
-        temp[5] = '00'
-        time = '-'.join(temp)
-    elif 30 <= int(now.strftime('%M')) < 45:
-        temp[4] = '30'
-        temp[5] = '00'
-        time = '-'.join(temp)
-    elif 45 <= int(now.strftime('%M')):
-        temp[4] = '45'
-        temp[5] = '00'
-        time = '-'.join(temp)
+    temp[4] = '00'
+    temp[5] = '00'
+    time = '-'.join(temp)
     # suppReservePwr = 공급예비력 = 공급능력 - 현재수요
     suppReservePwr = float(last_item.suppAbility.text) - float(last_item.currPwrTot.text)
 
