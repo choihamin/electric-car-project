@@ -44,13 +44,21 @@ def fee_set():
     try:
         try:
             now = datetime.datetime.now()
-            date = now.strftime("%Y-%m-%d-%H-00-00")
-            cur.execute("select * from HourData where lp_time_datetime='{}'".format(date))
+            if 0 <= int(now.strftime('%M')) < 15:
+                date = now.strftime("%Y-%m-%d-%H-00-00")
+            elif 15 <= int(now.strftime('%M')) < 30:
+                date = now.strftime("%Y-%m-%d-%H-15-00")
+            elif 30 <= int(now.strftime('%M')) < 45:
+                date = now.strftime("%Y-%m-%d-%H-30-00")
+            elif 45 <= int(now.strftime('%M')):
+                date = now.strftime("%Y-%m-%d-%H-45-00")
+            cur.execute("select * from LpData where lp_time_datetime='{}'".format(date))
             HD_target = cur.fetchall()[-1]
             supp_reserve_pwer = HD_target[1]
         except:
             raise Exception('{}에 해당하는 HourData가 존재하지 않습니다'.format(date))
         try:
+            date = now.strftime("%Y-%m-%d-%H-00-00")
             cur.execute("select * from Prophet where lp_time_datetime='{}'".format(date))
             PP_target = cur.fetchall()[-1]
             yhat = PP_target[1]
