@@ -553,17 +553,18 @@ def SetReserveInfo():
 
 
 sched = BackgroundScheduler()
-sched.add_job(return_supp, trigger='cron', args=['LpData'], hour='*', minute='*/15', second='59', id="test_1")
-sched.add_job(return_supp, trigger='cron', args=['HourData'], hour='*', minute='8', second='0', id="test_2")
-sched.add_job(prophet_1hour, trigger='cron', hour='*', minute='7', second='30', id="test_3")
-sched.add_job(fee_set, trigger='cron', hour='*', minute='4', second='0', id='test4')
-sched.add_job(fee_set, trigger='cron', hour='*', minute='19', second='0', id='test5')
+sched.add_job(return_supp, trigger='cron', args=['LpData'], hour='*', minute='*/30', second='59', id="test_1")
+sched.add_job(return_supp, trigger='cron', args=['HourData'], hour='*', minute='33', second='0', id="test_2")
+sched.add_job(prophet_1hour, trigger='cron', hour='*', minute='35', second='30', id="test_3")
+sched.add_job(fee_set, trigger='cron', hour='*', minute='38', second='0', id='test4')
+"""sched.add_job(fee_set, trigger='cron', hour='*', minute='19', second='0', id='test5')
 sched.add_job(fee_set, trigger='cron', hour='*', minute='34', second='0', id='test6')
 sched.add_job(fee_set, trigger='cron', hour='*', minute='49', second='0', id='test7')
-
+"""
 sched.start()
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0')
+
 
 
