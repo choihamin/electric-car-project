@@ -124,7 +124,7 @@ def prophet_1hour():
     prophet_data['cap'] = 1000000
     prophet_data['floor'] = 0
 
-    m.fit(prophet_data)
+    m.fit(prophet_data, iter=250)
 
     # 144 period = 144시간 = 7일 뒤 데이터까지 분석
     future = m.make_future_dataframe(periods=24, freq='H')
