@@ -539,31 +539,27 @@ def SetReserveInfo():
 
     # calculate expected_fee
     try:
-        cur.execute("select * from HourData")
-        HD_target = cur.fetchall()[-1]
-        date = HD_target[0]
-        supp_reserve_pwer = HD_target[1]
-
-        cur.execute("select * from Prophet where lp_time_datetime='{}'".format(date))
-        PP_target = cur.fetchall()[-1]
-        yhat = PP_target[1]
-        yhat_upper = PP_target[2]
-        yhat_lower = PP_target[3]
-
         now = datetime.datetime.now()
-        seasonTime = str(int(now.strftime('%m%H')))
-        cur.execute("select fee from SeasonTime natural join LoadFee where season_time_id=''".format(seasonTime))
-        fee = cur.fetchall()[0]
+        if 0 <= int(now.strftime('%M')) < 15:
+            date = now.strftime("%Y-%m-%d-%H-00-00")
+        elif 15 <= int(now.strftime('%M')) < 30:
+            date = now.strftime("%Y-%m-%d-%H-15-00")
+        elif 30 <= int(now.strftime('%M')) < 45:
+            date = now.strftime("%Y-%m-%d-%H-30-00")
+        elif 45 <= int(now.strftime('%M')):
+            date = now.strftime("%Y-%m-%d-%H-45-00")
 
-        if supp_reserve_pwer > yhat_upper:
-            expected_fee = fee * 0.8
-        elif supp_reserve_pwer < yhat_lower:
-            expected_fee = fee * 1.2
+
+        cur.execute("select fee from FeeInfo where lp_time_datetime='{}'".format(date))
+        data = cur.fetchall()
+        if data == []:
+            raise Exception('There is no FeeInfo in {}'.format(date))
         else:
-            expected_fee = fee * (((100 + yhat - supp_reserve_pwer)*20/(yhat_upper - yhat))/100)
+            expected_fee = data[0][0]
 
-    except:
+    except Exception as e:
         expected_fee = -1
+        print(e)
     # insert tuple
     try:
         reserve_id = str(uuid.uuid4())
