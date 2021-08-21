@@ -533,29 +533,28 @@ def SetReserveInfo():
     reserve_type = request.args.get('ReserveType')
     reserve_time = request.args.get('StartTime')
     finish_time = request.args.get('FinishTime')
-    minimum_cap = request.args.get('MinimumCap')
-    current_cap = request.args.get('CurrentCap') # 나중에 없앨 부분
+    minimum_cap = int(request.args.get('MinimumCap'))
+    current_cap = int(request.args.get('CurrentCap')) # 나중에 없앨 부분
+
+    cur.execute("select battery_capacity from customer natural join carmodel where customer_id = '{}'".format(id))
+    maximum_cap = int(cur.fetchall()[0][0])
 
 
     # calculate expected_fee
     try:
-        now = datetime.datetime.now()
-        if 0 <= int(now.strftime('%M')) < 15:
-            date = now.strftime("%Y-%m-%d-%H-00-00")
-        elif 15 <= int(now.strftime('%M')) < 30:
-            date = now.strftime("%Y-%m-%d-%H-15-00")
-        elif 30 <= int(now.strftime('%M')) < 45:
-            date = now.strftime("%Y-%m-%d-%H-30-00")
-        elif 45 <= int(now.strftime('%M')):
-            date = now.strftime("%Y-%m-%d-%H-45-00")
+        lst = finish_time.split('-')
+        standard = str(int(lst[1])) + lst[3] + lst[4]
 
+        cur.execute("select fee from SeasonTime natural join LoadFee where season_time_id = '{}'".format(standard))
+        fee = cur.fetchall()[0][0]
 
-        cur.execute("select fee from FeeInfo where lp_time_datetime='{}'".format(date))
-        data = cur.fetchall()
-        if data == []:
-            raise Exception('There is no FeeInfo in {}'.format(date))
+        max_fee = fee * 1.2
+        min_fee = fee * 0.8
+
+        if reserve_type == 1:
+            expected_fee = max_fee * maximum_cap * (1 - current_cap/100)
         else:
-            expected_fee = data[0][0]
+            expected_fee = min_fee * maximum_cap * ((current_cap - minimum_cap)/100)
 
     except Exception as e:
         expected_fee = -1
@@ -568,7 +567,7 @@ def SetReserveInfo():
         connect.commit()
         return jsonify({'service_reservation_id': reserve_id,
                         'expected_fee': expected_fee})
-    except:
+    except Exception as e:
         return jsonify({'result_code': 0})
     finally:
         if connect is not None:
@@ -577,7 +576,7 @@ def SetReserveInfo():
 
 
 
-sched = BackgroundScheduler()
+"""sched = BackgroundScheduler()
 sched.add_job(return_supp, trigger='cron', args=['LpData'], hour='*', minute='*/15', second='59', id="test_1")
 sched.add_job(return_supp, trigger='cron', args=['HourData'], hour='*', minute='5', second='0', id="test_2", misfire_grace_time=300)
 sched.add_job(prophet_1hour, trigger='cron', hour='*', minute='12', second='30', id="test_3", misfire_grace_time=240)
@@ -587,7 +586,7 @@ sched.add_job(fee_set, trigger='cron', hour='*', minute='34', second='0', id='te
 sched.add_job(fee_set, trigger='cron', hour='*', minute='49', second='0', id='test7')
 
 sched.start()
-
+"""
 if __name__ == "__main__":
     app.run(host='0.0.0.0')
 
