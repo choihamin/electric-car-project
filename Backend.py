@@ -67,7 +67,7 @@ def fee_set():
         except:
             raise Exception('{}에 해당하는 Prophet Data가 존재하지 않습니다'.format(date))
 
-        seasonTime = str(int(now.strftime('%m%H')))
+        seasonTime = str(int(now.strftime('%m%H%M')                                                                                                                                                                                   ))
         cur.execute("select fee from SeasonTime natural join LoadFee where season_time_id='{}'".format(seasonTime))
         fee = cur.fetchall()[0]
 
