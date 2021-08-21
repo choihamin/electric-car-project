@@ -66,8 +66,17 @@ def fee_set():
             yhat_lower = PP_target[3]
         except:
             raise Exception('{}에 해당하는 Prophet Data가 존재하지 않습니다'.format(date))
-
-        seasonTime = str(int(now.strftime('%m%H%M')                                                                                                                                                                                   ))
+        print(PP_target)
+        seasonTime = str(int(now.strftime('%m%H')))
+        if 0 <= int(now.strftime('%M')) < 15:
+            seasonTime += '00'
+        elif 15 <= int(now.strftime('%M')) < 30:
+            seaonTime += '15'
+            time = '-'.join(temp)
+        elif 30 <= int(now.strftime('%M')) < 45:
+            seasonTime += '30'
+        elif 45 <= int(now.strftime('%M')):
+            seasonTime += '45'
         cur.execute("select fee from SeasonTime natural join LoadFee where season_time_id='{}'".format(seasonTime))
         fee = cur.fetchall()[0]
 
@@ -121,7 +130,6 @@ def fee_set():
     finally:
         if connect is not None:
             connect.close()
-
 
 def prophet_1hour():
     connect = conn()
