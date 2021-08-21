@@ -72,7 +72,6 @@ def fee_set():
             seasonTime += '00'
         elif 15 <= int(now.strftime('%M')) < 30:
             seaonTime += '15'
-            time = '-'.join(temp)
         elif 30 <= int(now.strftime('%M')) < 45:
             seasonTime += '30'
         elif 45 <= int(now.strftime('%M')):
