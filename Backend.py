@@ -543,6 +543,14 @@ def SetReserveInfo():
     # calculate expected_fee
     try:
         lst = finish_time.split('-')
+        if 0 <= lst[4] < 15:
+            lst[4] = "00"
+        elif 15 <= lst[4] < 30:
+            lst[4] = "15"
+        elif 30 <= lst[4] < 45:
+            lst[4] = "30"
+        elif 45 <= lst[4]:
+            lst[4] = "45"
         standard = str(int(lst[1])) + lst[3] + lst[4]
 
         cur.execute("select fee from SeasonTime natural join LoadFee where season_time_id = '{}'".format(standard))
