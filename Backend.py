@@ -111,8 +111,8 @@ def fee_set():
         cur.execute("select * from FeeInfo")
         data = cur.fetchall()
 
-        if len(data) > 96:
-            while len(data) > 96:
+        if len(data) > 96*4:
+            while len(data) > 96*4:
                 first_idx = data[0][0]
                 cur.execute("delete from FeeInfo where lp_time_datetime='{}'".format(first_idx))
                 connect.commit()
@@ -438,15 +438,7 @@ def GetFeeInfo():
     try:
         cur.execute("select * from FeeInfo")
         data = cur.fetchall()
-        now = datetime.datetime.now()
-        string = now.strftime('%Y-%m-%d')
-
-        lst = []
-        for e in data:
-            if string in e[0]:
-                lst.append(e)
-        print(lst)
-        dict_ = jsonify(fee_history=[dict(hhmm=':'.join(e[0].split('-')[3:5]), fee=e[1]) for e in lst])
+        dict_ = jsonify(fee_history=[dict(datetime=e[0], fee=e[1]) for e in data])
         return dict_
     except:
         return jsonify({'result_code': -1})
@@ -581,8 +573,6 @@ def SetReserveInfo():
     finally:
         if connect is not None:
             connect.close()
-
-
 
 
 sched = BackgroundScheduler()
