@@ -16,6 +16,7 @@ from socket import timeout
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 from urllib.parse import urlencode, quote_plus, unquote
+from collections import deque
 
 
 
@@ -438,6 +439,21 @@ def GetFeeInfo():
     try:
         cur.execute("select * from FeeInfo")
         data = cur.fetchall()
+        data = sorted(data, key=lambda x: x[0])
+        q = deque(data)
+
+        while True:
+            time = datetime.datetime.strptime(q.popleft()[0], "%Y-%m-%d-%H-%M-%S")
+            next_time = q[0][0]
+            check = datetime.datetime.strftime(time + datetime.timedelta(minutes=15), "%Y-%m-%d-%H-%M-%S")
+            while check != next_time:
+                if check != next_time:
+                    data.append((check, -1))
+                time = datetime.datetime.strptime(check, "%Y-%m-%d-%H-%M-%S")
+                check = datetime.datetime.strftime(time + datetime.timedelta(minutes=15), "%Y-%m-%d-%H-%M-%S")
+            if len(q) == 1:
+                break;
+        data = sorted(data, key=lambda x: x[0])
         dict_ = jsonify(fee_history=[dict(datetime=e[0], fee=e[1]) for e in data])
         return dict_
     except:
