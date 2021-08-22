@@ -579,7 +579,10 @@ def SetReserveInfo():
         if reserve_type == 1:
             expected_fee = max_fee * maximum_cap * (1 - current_cap/100)
         else:
-            expected_fee = min_fee * maximum_cap * ((current_cap - minimum_cap)/100)
+            if current_cap <= minimum_cap:
+                expected_fee = 0
+            else:
+                expected_fee = min_fee * maximum_cap * ((current_cap - minimum_cap)/100)
 
     except Exception as e:
         expected_fee = -1
