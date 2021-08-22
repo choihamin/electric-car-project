@@ -297,15 +297,20 @@ def GetHomeInfo():
     efficiency = data[0][3]       # 연비
     current_capacity = -1
 
+
+
     try:
-        cur.execute("select reserve_id, reserve_time, finish_time, station_name, is_paid, reserve_type from ServiceReservation natural join Station where customer_id='{}'".format(id))
-        target = cur.fetchall()[-1]
+        cur.execute("select reserve_id, reserve_time, finish_time, station_name, is_paid, reserve_type, minimum_capacity from ServiceReservation natural join Station where customer_id='{}'".format(id))
+        data = cur.fetchall()
+        data = sorted(data, key=lambda x: x[1])
+        target = data[-1]
         service_reservation_id = target[0]
         start_time = target[1]
         end_time = target[2]
         station_name = target[3]
         is_paid = target[4]
         reserve_type = target[5]
+        minimum_capacity = target[6]
 
         return jsonify({'name': name,
                         'car_model_name': car_model,
@@ -317,7 +322,9 @@ def GetHomeInfo():
                         'start_time': start_time,
                         'finish_time': end_time,
                         'reserve_type': reserve_type,
-                        'station_name':station_name})
+                        'station_name': station_name,
+                        'minimum_capacity': minimum_capacity
+                        })
     except:
         return jsonify({'name': name,
                         'car_model_name': car_model,
@@ -330,6 +337,7 @@ def GetHomeInfo():
                         'finish_time': "몰라",
                         'reserve_type': -1,
                         'station_name': "몰라",
+                        'minimum_capacity': -1
                         })
     finally:
         if connect is not None:
