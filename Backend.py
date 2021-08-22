@@ -445,6 +445,7 @@ def GetFeeInfo():
         for e in data:
             if string in e[0]:
                 lst.append(e)
+        print(lst)
         dict_ = jsonify(fee_history=[dict(hhmm=':'.join(e[0].split('-')[3:5]), fee=e[1]) for e in lst])
         return dict_
     except:
@@ -584,7 +585,7 @@ def SetReserveInfo():
 
 
 
-"""sched = BackgroundScheduler()
+sched = BackgroundScheduler()
 sched.add_job(return_supp, trigger='cron', args=['LpData'], hour='*', minute='*/15', second='59', id="test_1")
 sched.add_job(return_supp, trigger='cron', args=['HourData'], hour='*', minute='5', second='0', id="test_2", misfire_grace_time=300)
 sched.add_job(prophet_1hour, trigger='cron', hour='*', minute='12', second='30', id="test_3", misfire_grace_time=240)
@@ -592,9 +593,7 @@ sched.add_job(fee_set, trigger='cron', hour='*', minute='4', second='0', id='tes
 sched.add_job(fee_set, trigger='cron', hour='*', minute='19', second='0', id='test5')
 sched.add_job(fee_set, trigger='cron', hour='*', minute='34', second='0', id='test6')
 sched.add_job(fee_set, trigger='cron', hour='*', minute='49', second='0', id='test7')
-
 sched.start()
-"""
 if __name__ == "__main__":
     app.run(host='0.0.0.0')
 
