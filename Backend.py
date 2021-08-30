@@ -454,12 +454,12 @@ def GetFeeInfo():
         while True:
             time = datetime.datetime.strptime(q.popleft()[0], "%Y-%m-%d-%H-%M-%S")
             next_time = q[0][0]
-            check = datetime.datetime.strftime(time + datetime.timedelta(minutes=15), "%Y-%m-%d-%H-%M-%S")
+            check = datetime.datetime.strftime(time + datetime.timedelta(minutes=30), "%Y-%m-%d-%H-%M-%S")
             while check != next_time:
                 if check != next_time:
                     data.append((check, -1))
                 time = datetime.datetime.strptime(check, "%Y-%m-%d-%H-%M-%S")
-                check = datetime.datetime.strftime(time + datetime.timedelta(minutes=15), "%Y-%m-%d-%H-%M-%S")
+                check = datetime.datetime.strftime(time + datetime.timedelta(minutes=30), "%Y-%m-%d-%H-%M-%S")
             if len(q) == 1:
                 break;
         data = sorted(data, key=lambda x: x[0])
