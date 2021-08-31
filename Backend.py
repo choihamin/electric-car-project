@@ -605,7 +605,7 @@ def SetReserveInfo():
 
 
 sched = BackgroundScheduler()
-sched.add_job(return_supp, trigger='cron', args=['LpData'], hour='*', minute='*/15', second='59', id="test_1")
+sched.add_job(return_supp, trigger='cron', args=['LpData'], hour='*', minute='*/15', second='59', id="test_1", misfire_grace_time=160)
 sched.add_job(return_supp, trigger='cron', args=['HourData'], hour='*', minute='5', second='0', id="test_2", misfire_grace_time=300)
 sched.add_job(prophet_1hour, trigger='cron', hour='*', minute='12', second='30', id="test_3", misfire_grace_time=240)
 sched.add_job(fee_set, trigger='cron', hour='*', minute='4', second='0', id='test4')
