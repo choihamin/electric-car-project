@@ -115,6 +115,7 @@ def fee_set():
 
         if len(data) > 96*4:
             while len(data) > 96*4:
+                data = sorted(data, key=lambda x: x[0])
                 first_idx = data[0][0]
                 cur.execute("delete from FeeInfo where lp_time_datetime='{}'".format(first_idx))
                 connect.commit()
