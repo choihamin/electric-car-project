@@ -111,7 +111,6 @@ def fee_set():
 
         cur.execute("select * from FeeInfo")
         data = cur.fetchall()
-        data = sorted(data, key=lambda x: x[0])
 
         if len(data) > 96*4:
             while len(data) > 96*4:
