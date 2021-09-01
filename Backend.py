@@ -246,6 +246,7 @@ def return_supp(table):
     try:
         if len(data) > length:
             while len(data) > length:
+                data = sorted(data, key=lambda x: x[0])
                 first_idx = data[0][0]
                 cur.execute("delete from {} where lp_time_datetime='{}'".format(table, first_idx))
                 connect.commit()
